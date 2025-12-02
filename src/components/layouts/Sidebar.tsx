@@ -6,7 +6,7 @@ const navItems = [
   { label: "홈", to: "/app/home", icon: "🏠" },
   { label: "루틴", to: "/app/routines", icon: "📋" },
   { label: "캘린더", to: "/app/calendar", icon: "📅" },
-  { label: "AI 코치", to: "/app/coach", icon: "🤖" },
+  { label: "AI 채팅", to: "/app/chat", icon: "🤖" },
   { label: "설정", to: "/app/settings", icon: "⚙️" },
 ];
 
