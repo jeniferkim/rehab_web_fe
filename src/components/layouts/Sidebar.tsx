@@ -7,7 +7,7 @@ const navItems = [
   { label: "루틴", to: "/app/routines", icon: "📋" },
   { label: "캘린더", to: "/app/calendar", icon: "📅" },
   { label: "AI 코치", to: "/app/coach", icon: "🤖" },
-  { label: "마이", to: "/app/my", icon: "👤" },
+  { label: "설정", to: "/app/settings", icon: "⚙️" },
 ];
 
 export default function Sidebar() {
