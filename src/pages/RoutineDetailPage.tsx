@@ -1,5 +1,5 @@
 // src/pages/RoutineDetailPage.tsx
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 
 import { mockRoutineDetailById } from "../mocks/routineMocks";
@@ -84,6 +84,9 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
     setIsCompleteModalOpen(true);
   };
 
+  const navigate = useNavigate();
+
+
   /* 🔹 3) 루틴 완료 처리 */
   const handleConfirmCompleteRoutine = () => {
     if (!isCompletedToday) {
@@ -165,6 +168,7 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
           <button
             type="button"
             className="rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            onClick={() => navigate(`/app/routines/${routine.id}/edit`)}
           >
             루틴 편집하기
           </button>
