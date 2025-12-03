@@ -7,7 +7,7 @@ import RoutineItemList from "../components/routine/RoutineItemList";
 import type {
   RoutineItem,
   RoutineItemDraft,
-} from "../types/routine";
+} from "../types/apis/routine";
 
 const RoutineCreatePage: React.FC = () => {
   const [name, setName] = useState<string>("");

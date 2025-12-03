@@ -10,7 +10,7 @@ import RoutineItemList from "../components/routine/RoutineItemList";
 import type {
   RoutineItem,
   RoutineItemDraft,
-} from "../types/routine";
+} from "../types/apis/routine";
 
 // 🔹 임시 mock 데이터 (나중에 API 연동으로 교체)
 const mockRoutineData: Record<

@@ -3,7 +3,7 @@
 
 // src/components/routine/RoutineItemList.tsx
 import React from "react";
-import type { RoutineItem, RoutineType } from "../../types/routine";
+import type { RoutineItem, RoutineType } from "../../types/apis/routine";
 
 type Props = {
   items: RoutineItem[];
