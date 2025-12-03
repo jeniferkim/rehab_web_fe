@@ -30,3 +30,12 @@ export type RoutineItemDraft = {
   type: RoutineType;
   memo: string;
 };
+
+// 루틴 상세 조회 응답용 (GET /routines/:id)
+export type RoutineDetail = {
+  id: string;
+  title: string;
+  duration: string;
+  level: string;
+  items: RoutineItem[];
+};
