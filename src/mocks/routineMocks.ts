@@ -9,6 +9,10 @@ import type {
   RoutineSummary,
   RoutineDetail,
   RoutineItem,
+  ExerciseSet,
+  RoutineExercise,
+  ClinicalEvidence,
+  RoutineDetailView,
 } from "../types/apis/routine";
 
 // ✅ 내 루틴 리스트 (RoutinesPage에서 쓰는 목록용)
@@ -103,5 +107,72 @@ export const mockRoutineDetailsById: Record<string, RoutineDetail> = {
     duration: "30분",
     level: "초급",
     items: mockRoutineItems2,
+  },
+};
+
+const setsNeckStretch: ExerciseSet[] = [
+  { setOrder: 1, reps: 10, restSeconds: 30 },
+  { setOrder: 2, reps: 10, restSeconds: 30 },
+];
+
+const setsShoulderRoll: ExerciseSet[] = [
+  { setOrder: 1, reps: 15, restSeconds: 20 },
+  { setOrder: 2, reps: 15, restSeconds: 20 },
+];
+
+const neckStretch: RoutineExercise = {
+  id: "ex-neck-1",
+  name: "목 측면 스트레칭",
+  bodyPart: "목",
+  thumbnailUrl:
+    "https://img.youtube.com/vi/VIDEO_ID_1/hqdefault.jpg",
+  videoUrl: "https://www.youtube.com/embed/VIDEO_ID_1",
+  caution: "통증이 느껴지면 범위를 줄이고, 어지러우면 중단하세요.",
+  sets: setsNeckStretch,
+  estimatedMinutes: 5,
+};
+
+const shoulderRoll: RoutineExercise = {
+  id: "ex-shoulder-1",
+  name: "어깨 돌리기",
+  bodyPart: "어깨",
+  thumbnailUrl:
+    "https://img.youtube.com/vi/VIDEO_ID_2/hqdefault.jpg",
+  videoUrl: "https://www.youtube.com/embed/VIDEO_ID_2",
+  caution: "호흡을 멈추지 말고 편안하게 반복하세요.",
+  sets: setsShoulderRoll,
+  estimatedMinutes: 5,
+};
+
+const evidenceList: ClinicalEvidence[] = [
+  {
+    id: "e1",
+    title: "목 통증 완화를 위한 스트레칭 프로그램 효과",
+    source: "JOSPT",
+    year: 2020,
+    summary:
+      "거북목 증후군 환자에서 4주간의 스트레칭 프로그램이 통증 감소와 기능 향상에 유의한 효과를 보였다는 연구.",
+    link: "https://example.com/paper1",
+  },
+  {
+    id: "e2",
+    title: "어깨 가동성 회복을 위한 운동안",
+    source: "대한정형외과학회지",
+    year: 2018,
+    summary:
+      "어깨 관절 가동범위 제한 환자에게 단계적 스트레칭이 유의한 기능 개선을 보였다는 보고.",
+    link: "https://example.com/paper2",
+  },
+];
+
+export const mockRoutineDetailById: Record<string, RoutineDetailView> = {
+  "1": {
+    id: "1",
+    title: "거북목 교정 루틴",
+    duration: "15분",
+    level: "초급",
+    items: [], // 기존 스케줄용이 필요 없으면 비워둬도 됨
+    exercises: [neckStretch, shoulderRoll],
+    clinicalEvidence: evidenceList,
   },
 };
