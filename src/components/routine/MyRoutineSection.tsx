@@ -4,7 +4,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import RoutineCard from "./RoutineCard";
-import type { RoutineSummary } from "../../types/routine";
+import type { RoutineSummary } from "../../types/apis/routine";
 
 type Props = {
   routines: RoutineSummary[];

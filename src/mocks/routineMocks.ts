@@ -9,7 +9,7 @@ import type {
   RoutineSummary,
   RoutineDetail,
   RoutineItem,
-} from "../types/routine";
+} from "../types/apis/routine";
 
 // ✅ 내 루틴 리스트 (RoutinesPage에서 쓰는 목록용)
 export const mockMyRoutines: RoutineSummary[] = [

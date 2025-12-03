@@ -1,6 +1,6 @@
 // src/components/routine/RoutineCard.tsx
 import React from "react";
-import type { RoutineSummary } from "../../types/routine";
+import type { RoutineSummary } from "../../types/apis/routine";
 
 type Props = {
   routine: RoutineSummary;

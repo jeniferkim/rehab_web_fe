@@ -3,7 +3,7 @@
 // 웹에선 왼쪽 패널로 배치하고, “추가하기” 누르면 오른쪽 리스트에 push.
 
 import React from "react";
-import type { RoutineItemDraft, RoutineType } from "../../types/routine";
+import type { RoutineItemDraft, RoutineType } from "../../types/apis/routine";
 
 type Props = {
   draft: RoutineItemDraft;
