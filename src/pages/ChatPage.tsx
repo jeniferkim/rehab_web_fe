@@ -6,14 +6,8 @@ import ChatMessageBubble, {
 } from "../components/chat/ChatMessageBubble";
 import QuickReplyChips from "../components/chat/QuickReplyChips";
 import ChatInputBar from "../components/chat/ChatInputBar";
+import { initialMessages } from "../mocks/chatMocks";
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: "1",
-    role: "assistant",
-    text: "안녕하세요! 오늘 어떤 점이 궁금하신가요?",
-  },
-];
 
 const quickReplies = ["허리가 아파요", "무릎 통증이 있어요", "어깨가 결려요"];
 
