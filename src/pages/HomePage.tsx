@@ -1,5 +1,10 @@
 // src/pages/HomePage.tsx
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  mockRoutineSummaryById,
+  mockTodayMainRoutineId,
+} from "../mocks/routineMocks";
 
 const HomePage: React.FC = () => {
   // 일단은 하드코딩된 값들 (나중에 API 연동하면 교체)
@@ -7,6 +12,20 @@ const HomePage: React.FC = () => {
   const todayRecoveryScore = 85;
   const streakDays = 12;
   const todayProgress = 40;
+
+  const navigate = useNavigate();
+
+  // 오늘의 메인 루틴 (없을 수도 있으니 optional)
+  const todayRoutine = mockRoutineSummaryById[mockTodayMainRoutineId];
+
+  const handleClickViewAllRoutines = () => {
+    navigate("/app/routines");
+  };
+
+  const handleClickStartTodayRoutine = () => {
+    if (!todayRoutine) return;
+    navigate(`/app/routines/${todayRoutine.id}`);
+  };
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -16,9 +35,7 @@ const HomePage: React.FC = () => {
         <h1 className="mt-3 text-3xl font-extrabold text-gray-900">
           안녕하세요, {username}님!
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          2025년 11월 27일 목요일
-        </p>
+        <p className="mt-1 text-sm text-gray-500">2025년 11월 27일 목요일</p>
       </section>
 
       {/* 상단 카드: 오늘의 회복 점수 / 연속 달성 */}
@@ -46,9 +63,7 @@ const HomePage: React.FC = () => {
             <span className="text-4xl font-extrabold text-gray-900">
               {streakDays}
             </span>
-            <span className="mb-1 text-sm font-semibold text-gray-700">
-              일
-            </span>
+            <span className="mb-1 text-sm font-semibold text-gray-700">일</span>
           </div>
           <p className="mt-2 text-sm text-gray-500">
             꾸준한 열정! 대단해요.
@@ -74,55 +89,56 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 오늘의 루틴 */}
+      {/* 오늘의 루틴 카드 */}
       <section className="rounded-3xl bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-base font-semibold text-gray-900">
             오늘의 루틴
           </p>
-          <button className="text-sm text-gray-400 hover:text-gray-600">
+          <button
+            type="button"
+            className="text-sm text-gray-400 hover:text-gray-600"
+            onClick={handleClickViewAllRoutines}
+          >
             전체 보기 &gt;
           </button>
         </div>
 
-        <ul className="divide-y divide-gray-100">
-          {/* 1. 완료된 루틴 */}
-          <li className="flex items-center justify-between py-3">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gray-100" />
-              <div>
-                <p className="text-sm font-semibold text-gray-900">
-                  스트레칭
+        {todayRoutine ? (
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-emerald-600">
+                오늘의 추천 루틴
+              </p>
+              <h2 className="mt-1 text-sm font-semibold text-gray-900">
+                {todayRoutine.title}
+              </h2>
+              <p className="mt-1 text-xs text-gray-500">
+                {todayRoutine.level} · {todayRoutine.duration}
+                {todayRoutine.itemCount != null &&
+                  ` · 운동 ${todayRoutine.itemCount}개`}
+              </p>
+              {todayRoutine.timeRangeLabel && (
+                <p className="mt-1 text-[11px] text-gray-400">
+                  권장 시간대: {todayRoutine.timeRangeLabel}
                 </p>
-                <p className="text-xs text-gray-500">10분</p>
-              </div>
+              )}
             </div>
-            <span className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white">
-              완료
-            </span>
-          </li>
 
-          {/* 2. 진행 전 루틴들 */}
-          <li className="flex items-center justify-between py-3">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gray-100" />
-              <div>
-                <p className="text-sm font-semibold text-gray-900">스쿼트</p>
-                <p className="text-xs text-gray-500">15분</p>
-              </div>
-            </div>
-          </li>
-
-          <li className="flex items-center justify-between py-3">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gray-100" />
-              <div>
-                <p className="text-sm font-semibold text-gray-900">걷기</p>
-                <p className="text-xs text-gray-500">30분</p>
-              </div>
-            </div>
-          </li>
-        </ul>
+            <button
+              type="button"
+              className="rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
+              onClick={handleClickStartTodayRoutine}
+            >
+              오늘 루틴 시작하기
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-500">
+            아직 설정된 오늘의 루틴이 없어요. 루틴 페이지에서 내 루틴을
+            만들어볼까요?
+          </div>
+        )}
       </section>
 
       {/* 통증 감소 추이 (그래프 자리) */}
