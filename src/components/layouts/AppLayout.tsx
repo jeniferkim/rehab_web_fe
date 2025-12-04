@@ -10,8 +10,7 @@ export const AppLayout = () => {
         <div className="flex-shrink-0">
           <Header />
         </div>
-
-
+        
         {/* Body 영역: Sidebar + Main */}
         <div className="flex flex-1">
             {/* Sidebar */}
