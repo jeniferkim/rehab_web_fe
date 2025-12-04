@@ -46,7 +46,7 @@ const RoutineCreatePage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <RoutineHeaderForm name={name} onChangeName={setName} />
 
       <div className="grid grid-cols-[2fr,3fr] gap-6">

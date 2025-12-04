@@ -10,7 +10,7 @@ type Props = {
 
 const RoutineHeaderForm: React.FC<Props> = ({ name, onChangeName }) => {
   return (
-    <section className="col-span-2 mb-2">
+    <section className="mt-1">
       <input
         className="w-full border-b border-gray-200 bg-transparent pb-2 text-2xl font-bold outline-none"
         placeholder="루틴 이름을 입력하세요"
