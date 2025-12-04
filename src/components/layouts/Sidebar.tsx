@@ -57,7 +57,7 @@ export default function Sidebar() {
               [
                 "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all",
                 isActive
-                  ? "bg-sky-500 text-white shadow-sm font-semibold"
+                  ? "bg-blue-500 text-white shadow-sm font-semibold"
                   : "text-slate-700 hover:bg-slate-50 font-medium",
               ].join(" ")
             }
