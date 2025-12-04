@@ -7,7 +7,7 @@ const OnboardingProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
 
-  const [nickname, setNickname] = useState(user?.username ?? "");
+  const [nickname, setNickname] = useState(user?.email ?? "");
   const [ageRange, setAgeRange] = useState("");
   const [painArea, setPainArea] = useState("");
   const [goal, setGoal] = useState("");

@@ -8,7 +8,7 @@ import {
 
 const HomePage: React.FC = () => {
   // 일단은 하드코딩된 값들 (나중에 API 연동하면 교체)
-  const username = "김지원";
+  const email = "김지원";
   const todayRecoveryScore = 85;
   const streakDays = 12;
   const todayProgress = 40;
@@ -33,7 +33,7 @@ const HomePage: React.FC = () => {
       <section className="mt-2">
         <p className="text-sm font-medium text-gray-500">홈</p>
         <h1 className="mt-3 text-3xl font-extrabold text-gray-900">
-          안녕하세요, {username}님!
+          안녕하세요, {email}님!
         </h1>
         <p className="mt-1 text-sm text-gray-500">2025년 11월 27일 목요일</p>
       </section>

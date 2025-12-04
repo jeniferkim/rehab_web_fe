@@ -8,7 +8,7 @@ const SignupPage: React.FC = () => {
   const signup = useAuthStore((state) => state.signup);
   const login = useAuthStore((state) => state.login);
 
-  const [username, setUsername] = useState("");
+  const [email, setemail] = useState("");
   const [phone, setPhone] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +19,7 @@ const SignupPage: React.FC = () => {
   const [idCheckMsg, setIdCheckMsg] = useState<string | null>(null);
 
   const handleIdCheck = () => {
-    if (!username) {
+    if (!email) {
       setIdCheckMsg("아이디를 먼저 입력해 주세요.");
       return;
     }
@@ -31,7 +31,7 @@ const SignupPage: React.FC = () => {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!username || !password || !passwordCheck) {
+    if (!email || !password || !passwordCheck) {
       setErrorMsg("필수 입력 항목을 모두 채워 주세요.");
       return;
     }
@@ -45,10 +45,10 @@ const SignupPage: React.FC = () => {
       setIsSubmitting(true);
 
       // 1) 회원가입
-      await signup({ username, password, phone });
+      await signup({ email, password, phone });
 
       // 2) 자동 로그인
-      await login({ username, password });
+      await login({ email, password });
 
       const currentUser = useAuthStore.getState().user;
 
@@ -87,12 +87,12 @@ const SignupPage: React.FC = () => {
                 type="text"
                 placeholder="아이디를 입력하세요"
                 className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-                value={username}
+                value={email}
                 onChange={(e) => {
-                  setUsername(e.target.value);
+                  setemail(e.target.value);
                   setIdCheckMsg(null);
                 }}
-                autoComplete="username"
+                autoComplete="email"
               />
               <button
                 type="button"

@@ -12,7 +12,7 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
 
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -21,14 +21,14 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!username || !password) {
+    if (!email || !password) {
       setErrorMsg("아이디와 비밀번호를 모두 입력해 주세요.");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await login({ username, password });
+      await login({ email, password });
 
       const currentUser = useAuthStore.getState().user;
 
@@ -60,7 +60,7 @@ const LoginPage: React.FC = () => {
             <span className="text-2xl">📈</span>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-extrabold text-blue-600">OnBeat</p>
+            <p className="text-2xl font-extrabold text-blue-600">Rehab</p>
             <p className="mt-1 text-xs text-gray-500">
               당신의 건강한 내일을 위한 스마트한 선택
             </p>
@@ -74,9 +74,9 @@ const LoginPage: React.FC = () => {
               type="text"
               placeholder="아이디"
               className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
             />
           </div>
           <div>
