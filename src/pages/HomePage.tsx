@@ -5,6 +5,7 @@ import {
   mockRoutineSummaryById,
   mockTodayMainRoutineId,
 } from "../mocks/routineMocks";
+import { PainTrendChart } from "../components/home/PainTrendChart";
 
 const HomePage: React.FC = () => {
   // 일단은 하드코딩된 값들 (나중에 API 연동하면 교체)
@@ -146,9 +147,7 @@ const HomePage: React.FC = () => {
         <p className="mb-3 text-base font-semibold text-gray-900">
           통증 감소 추이
         </p>
-        <div className="flex h-40 items-center justify-center rounded-2xl bg-gray-50 text-sm text-gray-400">
-          통증/회복 점수 차트 영역
-        </div>
+        <PainTrendChart />
       </section>
     </div>
   );
