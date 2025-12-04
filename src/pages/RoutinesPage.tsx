@@ -6,7 +6,7 @@ import { mockMyRoutines } from "../mocks/routineMocks";
 
 const RoutinesPage: React.FC = () => {
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
       {/* 상단 타이틀 섹션 */}
       <section className="mt-1">
         <h1 className="text-2xl font-bold text-gray-900">루틴</h1>

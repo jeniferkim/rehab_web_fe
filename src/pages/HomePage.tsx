@@ -29,7 +29,7 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
       {/* 인사 영역 */}
       <section className="mt-2">
         <p className="text-sm font-medium text-gray-500">홈</p>

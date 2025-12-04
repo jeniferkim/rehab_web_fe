@@ -48,15 +48,18 @@ const ChatPage: React.FC = () => {
 
   return (
     <div className="flex h-full flex-col">
-      {/* 상단 타이틀 */}
-      <div className="mb-4 border-b border-gray-100 pb-3">
-        <h1 className="text-2xl font-bold text-gray-900">채팅</h1>
-      </div>
+    {/* 상단 헤더 + 가로폭 제한 */}
+    <div className="mx-auto w-full max-w-6xl px-4">
+      <h1 className="mb-4 pb-3 text-2xl font-bold text-gray-900">
+        채팅
+      </h1>
+    </div>
 
-      {/* 채팅 메시지 영역 */}
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex-1 overflow-y-auto px-2 pb-2 pt-1">
-          <div className="flex flex-col gap-4">
+    {/* 채팅 본문 + max-w 유지 + flex-1 유지 */}
+    <div className="mx-auto flex w-full max-w-6xl flex-col flex-1 px-4">
+      {/* 메시지 리스트 */}
+      <div className="flex-1 overflow-y-auto pb-2">
+        <div className="flex flex-col gap-4">
             {messages.map((msg) => (
               <ChatMessageBubble key={msg.id} message={msg} />
             ))}
