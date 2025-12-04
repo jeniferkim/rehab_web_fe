@@ -1,24 +1,44 @@
-// src/components/calendar/CalendarMonthView.tsx
 import React from "react";
 import {
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
 } from "react-icons/hi2";
 
+type DayCompletionStatus = "done" | "pending" | "rest";
+
+type DayStatusMeta = {
+  completionStatus: DayCompletionStatus;
+  hasExercise: boolean;
+  hasMedication: boolean;
+  hasReminder: boolean;
+};
+
+type DayStatusMap = Record<string, DayStatusMeta>;
+
 type Props = {
   currentMonth: Date;
   selectedDate: Date;
   onChangeMonth: (offset: number) => void; // -1, +1
   onSelectDate: (date: Date) => void;
+  dayStatusByDate: DayStatusMap;
 };
 
 const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+
+// YYYY-MM-DD 포맷
+const formatDateKey = (date: Date) => {
+  const y = date.getFullYear();
+  const m = `${date.getMonth() + 1}`.padStart(2, "0");
+  const d = `${date.getDate()}`.padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
 
 const CalendarMonthView: React.FC<Props> = ({
   currentMonth,
   selectedDate,
   onChangeMonth,
   onSelectDate,
+  dayStatusByDate,
 }) => {
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth(); // 0-11
@@ -43,6 +63,37 @@ const CalendarMonthView: React.FC<Props> = ({
   for (let d = 1; d <= daysInMonth; d++) {
     days.push(d);
   }
+
+  const getDayClasses = (
+    status: DayCompletionStatus | undefined,
+    isSelected: boolean,
+    isToday: boolean
+  ) => {
+    let base =
+      "mx-auto flex h-10 w-10 flex-col items-center justify-center rounded-full text-xs transition";
+
+    if (isSelected) {
+      return `${base} bg-blue-600 text-white`;
+    }
+
+    if (status === "done") {
+      return `${base} bg-emerald-50 text-emerald-700`;
+    }
+
+    if (status === "pending") {
+      return `${base} bg-amber-50 text-amber-700`;
+    }
+
+    if (status === "rest") {
+      return `${base} bg-slate-50 text-slate-400`;
+    }
+
+    if (isToday) {
+      return `${base} border border-blue-500 text-blue-600 font-semibold`;
+    }
+
+    return `${base} text-gray-800 hover:bg-gray-100`;
+  };
 
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm">
@@ -82,19 +133,17 @@ const CalendarMonthView: React.FC<Props> = ({
           }
 
           const thisDate = new Date(year, month, day);
+          const dateKey = formatDateKey(thisDate);
+          const dayStatus = dayStatusByDate[dateKey];
+
           const isToday = isSameDay(thisDate, today);
-          const selected = isSameDay(thisDate, selectedDate);
+          const isSelected = isSameDay(thisDate, selectedDate);
 
-          let classes =
-            "mx-auto flex h-9 w-9 items-center justify-center rounded-full transition";
-
-          if (selected) {
-            classes += " bg-blue-600 text-white";
-          } else if (isToday) {
-            classes += " border border-blue-500 text-blue-600";
-          } else {
-            classes += " text-gray-800 hover:bg-gray-100";
-          }
+          const classes = getDayClasses(
+            dayStatus?.completionStatus,
+            isSelected,
+            isToday
+          );
 
           return (
             <button
@@ -103,7 +152,20 @@ const CalendarMonthView: React.FC<Props> = ({
               className={classes}
               onClick={() => onSelectDate(thisDate)}
             >
-              {day}
+              <span>{day}</span>
+
+              {/* 운동/복약/리마인더 유무를 작은 점으로 표시 */}
+              <span className="mt-0.5 flex gap-0.5">
+                {dayStatus?.hasExercise && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                )}
+                {dayStatus?.hasMedication && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                )}
+                {dayStatus?.hasReminder && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                )}
+              </span>
             </button>
           );
         })}

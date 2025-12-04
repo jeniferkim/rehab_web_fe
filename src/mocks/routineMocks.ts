@@ -176,3 +176,19 @@ export const mockRoutineDetailById: Record<string, RoutineDetailView> = {
     clinicalEvidence: evidenceList,
   },
 };
+
+// 오늘 메인 루틴으로 사용할 id
+export const mockTodayMainRoutineId = "1";
+
+// id -> 루틴 요약 맵 (홈에서 사용)
+export const mockRoutineSummaryById: Record<string, RoutineSummary> = {
+  "1": {
+    id: "1",
+    title: "거북목 교정 루틴",
+    duration: "15분",
+    level: "초급",
+    itemCount: 2,
+    timeRangeLabel: "오전 9시 ~ 10시",
+  },
+  // 필요하면 나머지 루틴도 채우기
+};

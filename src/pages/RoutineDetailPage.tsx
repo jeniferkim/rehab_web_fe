@@ -1,5 +1,5 @@
 // src/pages/RoutineDetailPage.tsx
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 
 import { mockRoutineDetailById } from "../mocks/routineMocks";
@@ -13,10 +13,19 @@ import NextExerciseBar from "../components/routine/NextExerciseBar";
 
 
 import type { RoutineDetailView, RoutineExercise } from "../types/apis/routine";
+import { updateDayStatus } from "../mocks/calendarStatusMock";
 import { RoutineCompleteModal } from "../components/routine/RoutineCompleteModal";
 import { PainScoreModal } from "../components/routine/PainScoreModal";
 
-// ✅ 1. 껍데기 컴포넌트: 데이터 유무만 판단
+// YYYY-MM-DD
+const formatDateKey = (date: Date) => {
+  const y = date.getFullYear();
+  const m = `${date.getMonth() + 1}`.padStart(2, "0");
+  const d = `${date.getDate()}`.padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+// 1. 껍데기: 데이터 유무만 판단
 const RoutineDetailPage = () => {
   const { routineId } = useParams<{ routineId: string }>();
   const routine = routineId ? mockRoutineDetailById[routineId] : undefined;
@@ -29,21 +38,18 @@ const RoutineDetailPage = () => {
     );
   }
 
-  // routine이 반드시 존재하는 경우에만 아래 컴포넌트가 렌더됨
   return <RoutineDetailPageContent routine={routine} />;
 };
 
 export default RoutineDetailPage;
 
-// ✅ 2. 실제 내용 컴포넌트: 여기서만 useState 사용
+// 2. 실제 내용
 interface RoutineDetailPageContentProps {
   routine: RoutineDetailView;
 }
 
 const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) => {
-  /* -----------------------------------------------------
-      🔥 1) 기본 상태
-  ----------------------------------------------------- */
+  /* 🔹 1) 기본 상태 */
   const totalExercises = routine.exercises.length;
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -51,21 +57,20 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
 
   const [isCompletedToday, setIsCompletedToday] = useState(false);
 
-  // streak mock
+  // streak mock (루틴 단위)
   const [streak, setStreak] = useState(5);
   const [bestStreak, setBestStreak] = useState(12);
 
-  // 모달 관련
+  // 모달
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [isPainModalOpen, setIsPainModalOpen] = useState(false);
   const [painScore, setPainScore] = useState(5);
 
-  // 간단 토스트 (나중에 Toast 컴포넌트로 교체 가능)
   const showToast = (msg: string) => alert(msg);
 
-  /* -----------------------------------------------------
-      🔥 2) 운동 선택 + 다음 운동
-  ----------------------------------------------------- */
+  const todayKey = formatDateKey(new Date());
+
+  /* 🔹 2) 운동 선택 + 다음 운동 */
   const handleSelectExercise = (exercise: RoutineExercise) => {
     const index = routine.exercises.findIndex((ex) => ex.id === exercise.id);
     if (index !== -1) setCurrentIndex(index);
@@ -76,13 +81,13 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
       setCurrentIndex((prev) => prev + 1);
       return;
     }
-    // 마지막 운동이면 완료 모달
     setIsCompleteModalOpen(true);
   };
 
-  /* -----------------------------------------------------
-      🔥 3) 루틴 완료 처리
-  ----------------------------------------------------- */
+  const navigate = useNavigate();
+
+
+  /* 🔹 3) 루틴 완료 처리 */
   const handleConfirmCompleteRoutine = () => {
     if (!isCompletedToday) {
       const next = streak + 1;
@@ -90,7 +95,16 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
       setStreak(next);
       setBestStreak((prev) => Math.max(prev, next));
 
-      // TODO: 나중에 API 호출로 교체
+      // ✅ 캘린더 상태 mock 갱신
+      updateDayStatus(todayKey, (prev) => ({
+        completionStatus: "done",
+        streakCount: next, // 오늘까지 연속 일수
+        painScore: prev?.painScore, // 통증은 나중에 모달에서 갱신
+        hasExercise: prev?.hasExercise ?? true,
+        hasMedication: prev?.hasMedication ?? false,
+        hasReminder: prev?.hasReminder ?? false,
+      }));
+
       showToast(`오늘 루틴 완료! 연속 ${next}일째 🎉`);
     }
 
@@ -98,18 +112,23 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
     setIsPainModalOpen(true); // 통증 점수 모달 열기
   };
 
-  /* -----------------------------------------------------
-      🔥 4) 통증 점수 저장
-  ----------------------------------------------------- */
+  /* 🔹 4) 통증 점수 저장 */
   const handleSubmitPainScore = () => {
-    // TODO: 통증 점수 저장 API 연결
+    // ✅ 해당 날짜의 painScore만 업데이트
+    updateDayStatus(todayKey, (prev) => ({
+      completionStatus: prev?.completionStatus ?? "pending",
+      streakCount: prev?.streakCount ?? streak,
+      hasExercise: prev?.hasExercise ?? true,
+      hasMedication: prev?.hasMedication ?? false,
+      hasReminder: prev?.hasReminder ?? false,
+      painScore,
+    }));
+
     showToast(`통증 점수 ${painScore}점으로 기록했어요.`);
     setIsPainModalOpen(false);
   };
 
-  /* -----------------------------------------------------
-      🔥 5) 렌더링
-  ----------------------------------------------------- */
+  /* 🔹 5) 렌더링 */
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       {/* 상단 헤더 */}
@@ -149,6 +168,7 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
           <button
             type="button"
             className="rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            onClick={() => navigate(`/app/routines/${routine.id}/edit`)}
           >
             루틴 편집하기
           </button>
