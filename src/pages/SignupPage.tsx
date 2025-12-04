@@ -19,12 +19,11 @@ const SignupPage: React.FC = () => {
   const [idCheckMsg, setIdCheckMsg] = useState<string | null>(null);
 
   const handleIdCheck = () => {
-    // TODO: 아이디 중복 확인 API 붙이기
-    // 일단 더미
     if (!username) {
       setIdCheckMsg("아이디를 먼저 입력해 주세요.");
       return;
     }
+    // TODO: 실제 아이디 중복확인 API 호출
     setIdCheckMsg("사용 가능한 아이디입니다.");
   };
 
@@ -48,16 +47,16 @@ const SignupPage: React.FC = () => {
       // 1) 회원가입
       await signup({ username, password, phone });
 
-      // 2) 회원가입 후 자동 로그인 (플로우 단순화)
+      // 2) 자동 로그인
       await login({ username, password });
 
       const currentUser = useAuthStore.getState().user;
 
-      // 3) 온보딩 시작으로 라우팅
+      // 3) 온보딩 or 홈으로
       if (currentUser && !currentUser.onboardingCompleted) {
         navigate("/onboarding/profile", { replace: true });
       } else {
-        navigate("/home", { replace: true });
+        navigate("/app/home", { replace: true });
       }
     } catch (error) {
       setErrorMsg("회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
@@ -104,7 +103,6 @@ const SignupPage: React.FC = () => {
               </button>
             </div>
 
-            {/* 안내/에러 메시지 자리 */}
             {idCheckMsg && (
               <p className="rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-700">
                 {idCheckMsg}
@@ -129,9 +127,7 @@ const SignupPage: React.FC = () => {
                 <button
                   type="button"
                   className="whitespace-nowrap rounded-xl bg-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-400"
-                  // TODO: 인증번호 전송 로직
                   onClick={() => {
-                    // 임시 동작
                     alert("인증번호 발송 기능은 추후 제공됩니다.");
                   }}
                 >
@@ -151,7 +147,6 @@ const SignupPage: React.FC = () => {
               <button
                 type="button"
                 className="whitespace-nowrap rounded-xl bg-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-400"
-                // TODO: 인증번호 검증 로직
                 onClick={() => {
                   alert("인증 완료 기능은 추후 제공됩니다.");
                 }}
@@ -184,12 +179,10 @@ const SignupPage: React.FC = () => {
             />
           </div>
 
-          {/* 에러 메시지 */}
           {errorMsg && (
             <p className="text-xs text-red-500">{errorMsg}</p>
           )}
 
-          {/* 가입 버튼 */}
           <button
             type="submit"
             disabled={isSubmitting}

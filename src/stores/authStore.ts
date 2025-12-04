@@ -17,6 +17,7 @@ type AuthState = {
     phone?: string;
   }) => Promise<void>;
   logout: () => void;
+  setUser: (user: User | null) => void; // 카카오 콜백 등에서 직접 세팅
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -52,5 +53,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       user: null,
       isAuthenticated: false,
+    }),
+
+    setUser: (user) =>
+    set({
+      user,
+      isAuthenticated: !!user,
     }),
 }));

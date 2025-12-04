@@ -3,10 +3,14 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 
+// 카카오 인가 URL (// 👶🏻 Todo: 백엔드 주소에 맞게 env로 빼두는 걸 추천)
+const KAKAO_AUTH_URL =
+  import.meta.env.VITE_KAKAO_AUTH_URL ??
+  "http://localhost:8080/oauth2/authorization/kakao"; // 예시 URL, 실제 주소로 변경
+
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
-  const user = useAuthStore((state) => state.user);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -26,19 +30,25 @@ const LoginPage: React.FC = () => {
       setIsSubmitting(true);
       await login({ username, password });
 
-      // 로그인 후 온보딩 여부에 따라 라우팅
       const currentUser = useAuthStore.getState().user;
+
+      // ✅ App 라우트 구조에 맞춰서 /app/home 으로 이동
       if (currentUser && !currentUser.onboardingCompleted) {
+        // 온보딩 페이지 만들면 여기로 연결
         navigate("/onboarding/profile", { replace: true }); // 👶🏻 Todo: 온보딩 엔드포인트 확인
       } else {
-        navigate("/home", { replace: true });
+        navigate("/app/home", { replace: true });
       }
     } catch (error) {
-      // 실제 API 사용 시 에러 메시지 파싱해서 세팅
       setErrorMsg("아이디 또는 비밀번호가 올바르지 않습니다.");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleKakaoLogin = () => {
+    // ✅ 카카오 로그인은 보통 백엔드 OAuth 엔드포인트로 리다이렉트
+    window.location.href = KAKAO_AUTH_URL;
   };
 
   return (
@@ -47,7 +57,6 @@ const LoginPage: React.FC = () => {
         {/* 로고 & 문구 */}
         <div className="mb-10 flex flex-col items-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-100">
-            {/* 아이콘 자리 */}
             <span className="text-2xl">📈</span>
           </div>
           <div className="text-center">
@@ -58,7 +67,7 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 폼 */}
+        {/* 이메일/패스워드 폼 */}
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <input
@@ -81,12 +90,10 @@ const LoginPage: React.FC = () => {
             />
           </div>
 
-          {/* 에러 메시지 */}
           {errorMsg && (
             <p className="text-xs text-red-500">{errorMsg}</p>
           )}
 
-          {/* 로그인 버튼 */}
           <button
             type="submit"
             disabled={isSubmitting}
@@ -95,6 +102,23 @@ const LoginPage: React.FC = () => {
             {isSubmitting ? "로그인 중..." : "로그인"}
           </button>
         </form>
+
+        {/* 구분선 */}
+        <div className="my-4 flex items-center justify-center">
+          <span className="h-px flex-1 bg-gray-200" />
+          <span className="px-3 text-[10px] text-gray-400">또는</span>
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
+
+        {/* ✅ 카카오 로그인 버튼 */}
+        <button
+          type="button"
+          onClick={handleKakaoLogin}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FEE500] py-3 text-sm font-semibold text-gray-900 hover:brightness-95"
+        >
+          {/* 아이콘 자리는 나중에 svg 넣어도 되고 지금은 텍스트만 */}
+          <span>카카오로 3초 만에 시작하기</span>
+        </button>
 
         {/* 하단 링크 */}
         <div className="mt-6 text-center">
