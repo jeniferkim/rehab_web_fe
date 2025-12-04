@@ -7,7 +7,9 @@ export const AppLayout = () => {
   return (
     <div className="flex h-screen flex-col">
         {/* Header */}
-        <Header />
+        <div className="flex-shrink-0">
+          <Header />
+        </div>
 
         {/* Body 영역: Sidebar + Main */}
         <div className="flex flex-1">
