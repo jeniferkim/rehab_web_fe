@@ -11,6 +11,7 @@ import SettingsPage from './pages/SettingsPage'
 import CalendarPage from './pages/CalendarPage'
 import ChatPage from './pages/ChatPage'
 import RoutineDetailPage from './pages/RoutineDetailPage'
+import OnboardingProfilePage from './pages/OnboardingProfilePage'
 
 function App() {
 
@@ -21,6 +22,8 @@ function App() {
           {/* 인증 전 페이지 */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/onboarding/profile" element={<OnboardingProfilePage />} />
+
 
           {/* AppLayout이 적용되는 내부 페이지들 */}
           <Route path="/app" element={<AppLayout />}>

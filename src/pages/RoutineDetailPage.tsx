@@ -125,7 +125,10 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
     }));
 
     showToast(`통증 점수 ${painScore}점으로 기록했어요.`);
+
+    // 모달 닫고 홈으로 이동
     setIsPainModalOpen(false);
+    navigate("/app/home");
   };
 
   /* 🔹 5) 렌더링 */
