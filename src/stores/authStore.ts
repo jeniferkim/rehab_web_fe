@@ -19,14 +19,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
 
-  login: async ({ email }) => {
+  login: async ({ email, password }) => {
     // TODO: 여기에서 실제 로그인 API 연동 후 /users/me 호출로 교체
     // 일단 더미 구현 (나중에 API로 교체)
     await new Promise((r) => setTimeout(r, 500));
     const dummyUser: AppUser = {
-      id: "1",
+      userId: 1,
+      username: "테스트 사용자",
       email,
-      onboardingCompleted: false,
+      gender: "OTHER",
+      age: 0,
+      height: 0,
+      weight: 0,
+      profileCompleted: false,
+      onboardingCompleted: false, // STEP2 끝나면 true 로 setUser에서 바꿔줌
     };
 
     set({
@@ -35,7 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
 
-  signup: async () => {
+  signup: async ({ email, password, phone }) => {
     // TODO: 실제 회원가입 API 호출
     // 일단 더미 딜레이만
     await new Promise((r) => setTimeout(r, 500));
