@@ -1,3 +1,4 @@
+// 요거 픽스된 거임. 스웨거 문서 보면서 맞춰놨으니까 수정할 거면 잘 보고 하세용
 // src/types/apis/exercise.ts
 
 export type ExerciseDifficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | string;

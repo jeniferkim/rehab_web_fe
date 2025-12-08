@@ -1,3 +1,4 @@
+// 얘도 픽스. 스웨거랑 맞춰놓음. 수정할 거면 잘 보고 하세용
 // src/types/apis/rehab.ts
 
 export type RehabPlanStatus = "ACTIVE" | "INACTIVE" | "COMPLETED";
@@ -20,7 +21,7 @@ export type PlanItemStatus = "ACTIVE" | "INACTIVE" | "PAUSED" | string;
 // 플랜 안에 들어있는 단일 운동 항목
 export interface RehabPlanItem {
   planItemId: number;
-  rehabPlanId: number;
+  // rehabPlanId: number;
   exerciseId: number;
   phase: RehabPlanPhase;
   orderIndex: number;
@@ -35,6 +36,6 @@ export interface RehabPlanItem {
 export interface RehabPlanItemsByDate {
   rehabPlanId: number;
   date: string;          // YYYY-MM-DD
-  title?: string;        // "허리 통증 완화 루틴" 같은 이름 (옵션)
+  // title?: string;        // "허리 통증 완화 루틴" 같은 이름 (옵션)
   items: RehabPlanItem[];
 }

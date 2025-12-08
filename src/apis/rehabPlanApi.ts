@@ -8,7 +8,7 @@ import type {
 import {
   mockCurrentPlan,
   mockPlanItemsToday,
-} from "../mocks/rehabPlanMocks.ts";
+} from "../mocks/rehabPlanMocks";
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -24,8 +24,15 @@ export const rehabPlanApi = {
     if (USE_MOCK) {
       await delay(300);
       console.log("[MOCK] GET /rehab/plans/current", { userId });
-      // userId만 덮어씌워서 재사용
-      return { ...mockCurrentPlan, userId };
+
+      // mockCurrentPlan 내부에 이미 타입이 맞춰져 있으므로 그대로 반환
+      // 단 userId는 외부에서 지정
+      const result: RehabPlanSummary = {
+        ...mockCurrentPlan,
+        userId,
+      };
+
+      return result;
     }
 
     // 🔹 실제 서버 연결 시 (엔드포인트는 스웨거 보고 맞춰서 수정)
@@ -50,11 +57,10 @@ export const rehabPlanApi = {
       await delay(300);
       console.log("[MOCK] GET /rehab/plans/{id}/items", { rehabPlanId, date });
 
-      // 날짜/플랜 ID를 호출 인자에 맞춰 덮어씌워서 사용
       return {
-        ...mockPlanItemsToday,
         rehabPlanId,
         date,
+        items: mockPlanItemsToday.items,
       };
     }
 
