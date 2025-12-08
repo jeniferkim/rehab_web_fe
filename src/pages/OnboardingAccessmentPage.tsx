@@ -1,6 +1,10 @@
+// 문진 페이지에서 제출 시점에 서버에 저장
+
 // src/pages/onboarding/OnboardingAssessmentPage.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
+import { intakeApi } from "../apis/intakeApi";
 
 const MSK_REGIONS = [
   "목 / 어깨",
@@ -30,6 +34,7 @@ function triageRisk(painScore: number): RiskLevel {
 
 const OnboardingAssessmentPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, setUser } = useAuthStore();
 
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [painScore, setPainScore] = useState<number | null>(null);
@@ -37,12 +42,21 @@ const OnboardingAssessmentPage: React.FC = () => {
     null
   );
   const [customGoal, setCustomGoal] = useState("");
+  const [symptomDetail, setSymptomDetail] = useState(""); // 증상 상세 설명
   const [showRiskModal, setShowRiskModal] = useState<RiskLevel | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (!user) {
+      navigate("/login", { replace: true });
+    }
+  }, [user, navigate]);
+
+  // 통증 부위 + 통증 점수만 필수, 목표/상세 설명은 선택
   const isValid = selectedRegion !== null && painScore !== null;
   const finalGoal = customGoal || selectedGoalPreset || "";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid || painScore === null) return;
 
@@ -53,10 +67,37 @@ const OnboardingAssessmentPage: React.FC = () => {
 
     if (risk === "high") {
       setShowRiskModal("high");
-    } else {
-      // 온보딩 전체 완료 플래그는 여기서 세팅하면 됨
-      // setUser({ ...user, onboardingCompleted: true });
+      return;
+    }
+
+    // risk OK → 서버에 intake 저장
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        painArea: mapRegionToPainAreaCode(selectedRegion),
+        painLevel: painScore,
+        goal: finalGoal,
+        exerciseExperience: "BEGINNER" as const,
+        symptomDetail,
+      };
+
+      // 나중에 실제 서버 연동 시 여기만 교체하면 됨
+      // await intakeApi.upsertMyIntake(payload);
+
+      // 데모용: 콘솔에만 출력
+      console.log("[Mock] /users/me/intake 요청 바디:", payload);
+
+      // 온보딩 완료 플래그를 프론트 유저 객체에 표시
+      if (user) {
+        setUser({
+          ...user,
+          onboardingCompleted: true,
+        });
+      }
+
       navigate("/app/home", { replace: true });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -147,7 +188,29 @@ const OnboardingAssessmentPage: React.FC = () => {
 
           <div className="h-px bg-gray-100" />
 
-          {/* 3. 재활 목표 (간단 프리셋 + 한 줄 입력) */}
+          {/* 3. 증상 상세 설명 (선택) */}
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-900">
+                요즘 어떤 상황에서 가장 불편한가요?
+              </h2>
+              <span className="text-[11px] text-gray-400">선택</span>
+            </div>
+            <p className="text-[11px] text-gray-500">
+              예: 오래 앉았다가 일어날 때 허리가 뻐근해요. 아침에 더 심해요.
+            </p>
+            <textarea
+              rows={3}
+              value={symptomDetail}
+              onChange={(e) => setSymptomDetail(e.target.value)}
+              placeholder="자유롭게 적어주세요. 나중에 AI 상담에 활용돼요."
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
+            />
+          </section>
+
+          <div className="h-px bg-gray-100" />
+
+          {/* 4. 재활 목표 (간단 프리셋 + 한 줄 입력) */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-gray-900">
@@ -201,10 +264,10 @@ const OnboardingAssessmentPage: React.FC = () => {
           <div className="pt-2">
             <button
               type="submit"
-              disabled={!isValid}
+              disabled={!isValid || isSubmitting}
               className="w-full rounded-xl bg-black py-3 text-sm font-semibold text-white hover:bg-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              결과 확인하고 시작하기
+              {isSubmitting ? "저장 중..." : "결과 확인하고 시작하기"}
             </button>
           </div>
         </form>
@@ -236,3 +299,15 @@ const OnboardingAssessmentPage: React.FC = () => {
 };
 
 export default OnboardingAssessmentPage;
+
+// UI에서 사용하는 label -> 서버 코드로 매핑
+function mapRegionToPainAreaCode(label: string): string {
+  // 백엔드 ENUM 이름에 맞춰서 여기만 조정해주면 된다.
+  if (label.includes("목") || label.includes("어깨")) return "NECK";
+  if (label.includes("허리")) return "BACK";
+  if (label.includes("무릎")) return "KNEE";
+  if (label.includes("발목") || label.includes("발")) return "ANKLE";
+  if (label.includes("손")) return "HAND";
+  if (label.includes("고관절")) return "HIP";
+  return "ETC";
+}
