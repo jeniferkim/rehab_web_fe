@@ -64,7 +64,7 @@ const HomePage: React.FC = () => {
     // 아직 플랜 → 루틴 상세 라우트가 확정 안 됐으니
     // 일단 루틴 목록으로만 보내고, 나중에 /app/routines/:planId 로 바꿔도 됨
     // navigate(`/app/routines/${currentPlan.id}`);
-    navigate("/app/routines");
+    navigate("/app/routines/${currentPlan.rehabPlanId}");
   };
 
   const displayName = user?.username || user?.email || "사용자";
