@@ -1,4 +1,5 @@
 // 운동 로그 타입 정의
+// 요것도 스웨거 보고 맞춰놓은거임. 픽스~~ 수정할 거면 잘 확인하기
 // src/types/apis/exerciseLog.ts
 
 // status 값은 스웨거 예시는 "COMPLETED" 하나지만,

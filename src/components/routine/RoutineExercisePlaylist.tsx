@@ -8,7 +8,7 @@ import type { RoutineExercise } from "../../types/apis/routine";
 
 interface RoutineExercisePlaylistProps {
   exercises: RoutineExercise[];
-  selectedId: string;
+  selectedId: number;
   onSelect: (exercise: RoutineExercise) => void;
 }
 

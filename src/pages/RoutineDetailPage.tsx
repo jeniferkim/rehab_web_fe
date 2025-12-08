@@ -1,3 +1,4 @@
+// 플랜 항목 목록 조회 → 항목에 들어있는 exerciseId로 운동 상세 여러 개 조회 → 합쳐서 RoutineDetailView 만들기
 // src/pages/RoutineDetailPage.tsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -18,6 +19,8 @@ import { RoutineCompleteModal } from "../components/routine/RoutineCompleteModal
 import { PainScoreModal } from "../components/routine/PainScoreModal";
 import { rehabPlanApi } from "../apis/rehabPlanApi";
 import { exerciseApi } from "../apis/exerciseApi";
+import { exerciseLogApi } from "../apis/exerciseLogApi";
+import { useAuthStore } from "../stores/authStore";
 
 // YYYY-MM-DD
 const formatDateKey = (date: Date) => {
@@ -131,7 +134,7 @@ const RoutineDetailPage = () => {
         // 4) 최종 ViewModel 구성
         const detailView: RoutineDetailView = {
           id: rehabPlanId,
-          title: planItemsByDate.title ?? "오늘의 재활 루틴",
+          title: "오늘의 재활 루틴",
           level: "초급", // TODO: 백엔드 플랜 레벨 나오면 매핑
           duration: `${exercises.length * 5}분`, // 대략: 운동 개수 * 5분
           exercises,
@@ -192,6 +195,8 @@ interface RoutineDetailPageContentProps {
 }
 
 const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) => {
+  const { user } = useAuthStore();
+
   /* 🔹 1) 기본 상태 */
   const totalExercises = routine.exercises.length;
 
@@ -255,7 +260,35 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
   };
 
   /* 🔹 4) 통증 점수 저장 */
-  const handleSubmitPainScore = () => {
+  const handleSubmitPainScore = async () => {
+    const loggedAt = new Date().toISOString();
+
+    // 1) 운동 로그 저장 (mock 기준)
+    if (user?.userId) {
+      try {
+        await Promise.all(
+          routine.exercises.map((ex) =>
+            exerciseLogApi.createExerciseLog({
+              userId: user.userId,
+              body: {
+                planItemId: ex.id,           // 우리는 planItemId를 RoutineExercise.id로 사용 중
+                loggedAt,
+                painAfter: painScore,
+                completionRate: 100,
+                // 필요하면 여기서 rpe, durationSec 등 추가
+              },
+            }),
+          ),
+        );
+        console.log("[Routine] exercise logs saved for routine", routine.id);
+      } catch (e) {
+        console.error("[Routine] save exercise logs failed", e);
+        // 일단 서비스 끊기지 않게 캘린더/네비게이션은 계속 진행
+      }
+    } else {
+      console.log("[Routine] user is null, skip exerciseLogApi");
+    }
+
     // ✅ 해당 날짜의 painScore만 업데이트
     updateDayStatus(todayKey, (prev) => ({
       completionStatus: prev?.completionStatus ?? "pending",

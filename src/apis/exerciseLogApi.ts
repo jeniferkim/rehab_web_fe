@@ -1,6 +1,6 @@
 // src/apis/exerciseLogApi.ts
-import { apiClient } from "./client";
-import type { ApiResponse } from "../types/apis/common";
+// import { apiClient } from "./client";
+// import type { ApiResponse } from "../types/apis/common";
 import type {
   ExerciseLog,
   ExerciseLogsByDate,
