@@ -1,16 +1,25 @@
+// 신체 기본 정보 받기
+
 // src/pages/OnboardingProfilePage.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import type { Gender } from "../types/apis/user";
+import { userApi } from "../apis/userApi";
 
 const OnboardingProfilePage: React.FC = () => {
+  
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
 
-  // ✅ 닉네임/사용자 ID 제거 → 기본 프로필만
-  const [ageRange, setAgeRange] = useState("");
-  const [painArea, setPainArea] = useState("");
-  const [goal, setGoal] = useState("");
+  const [username, setUsername] = useState(user?.username ?? "");
+  const [gender, setGender] = useState<Gender | "">(
+    (user?.gender as Gender) ?? "",
+  );
+  const [age, setAge] = useState(user?.age ? String(user.age) : "");
+  const [height, setHeight] = useState(user?.height ? String(user.height) : "");
+  const [weight, setWeight] = useState(user?.weight ? String(user.weight) : "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 로그인 안 되어 있으면 로그인으로 돌려보내기
   useEffect(() => {
@@ -19,114 +28,163 @@ const OnboardingProfilePage: React.FC = () => {
     }
   }, [user, navigate]);
 
-  // 필수값: 연령대 + 주요 통증 부위
-  const isValid = !!(ageRange && painArea);
+  const isValid =
+    username.trim() &&
+    gender &&
+    age.trim() &&
+    height.trim() &&
+    weight.trim();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !isValid) return;
 
-    // TODO: 프로필 정보 저장 (예: profileStore 또는 서버 전송)
-    // 이 예시는 user 객체에 임시로 붙여두는 형태라,
-    // 실제 타입 정의에 맞게 수정해서 사용하면 됨.
-    const updatedUser = {
-      ...user,
-      // ⚠ 실제 User 타입에 맞게 key 이름은 프로젝트에서 조정하기
-      profile: {
-        ageRange,
-        mainPainArea: painArea,
-        goal,
-      },
-      // 온보딩 전체 완료는 "문진까지 끝난 후"에 설정하는 걸 추천
-      // onboardingCompleted: true,
-    };
+    setIsSubmitting(true);
+    try {
+    // TODO: 나중에 실제 API 붙이기
+    // const updated = await userApi.updateMe(payload);
+    // setUser({ ...user, ...updated, profileCompleted: true });
 
-    setUser(updatedUser);
+    await new Promise((r) => setTimeout(r, 300)); // 데모용 딜레이
 
-    // 프로필 완료 후 → 문진(assessment) 페이지로 이동
-    navigate("/onboarding/assessment", { replace: true });
+    // 나중에 이거 주석 풀면 됨.
+    // try {
+    //   const payload = {
+    //     username: username.trim(),
+    //     gender: gender as Gender,
+    //     age: Number(age),
+    //     height: Number(height),
+    //     weight: Number(weight),
+    //   };
+
+    //   // 1) 서버에 프로필 저장
+    //   const updated = await userApi.updateMe(payload);
+
+    //   // 2) 프론트 상태 업데이트 (profileCompleted 반영)
+    //   setUser({
+    //     ...user,
+    //     ...updated,
+    //     profileCompleted: true,
+    //   });
+
+      // 3) 다음 단계(문진)로 이동
+      navigate("/onboarding/assessment", { replace: true });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  console.log(user);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white px-6 py-8 shadow-md">
         {/* 상단 타이틀 */}
         <header className="mb-6">
-          <p className="text-xs font-semibold text-blue-600">온보딩 · Step 1</p>
+          <p className="text-xs font-semibold text-blue-600">
+            온보딩 · STEP 1
+          </p>
           <h1 className="mt-1 text-2xl font-bold text-gray-900">
             기본 정보를 알려주세요
           </h1>
           <p className="mt-1 text-xs text-gray-500">
-            앞으로의 홈 재활 코칭을 위해 몇 가지만 간단히 확인할게요.
+            이름과 신체 정보는 재활 계획을 세밀하게 맞추는 데 사용돼요.
           </p>
         </header>
 
         {/* 폼 */}
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          {/* 연령대 */}
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {/* 이름 */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-800">
-              연령대
+              이름 또는 호칭
             </label>
-            <select
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-              value={ageRange}
-              onChange={(e) => setAgeRange(e.target.value)}
-            >
-              <option value="">선택하세요</option>
-              <option value="20s">20대</option>
-              <option value="30s">30대</option>
-              <option value="40s">40대</option>
-              <option value="50s">50대</option>
-              <option value="60+">60대 이상</option>
-            </select>
+            <input
+              type="text"
+              placeholder="예: 김지원 / 지원님"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
           </div>
 
-          {/* 주요 통증 부위 */}
+          {/* 성별 */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-800">
-              주요 통증 부위
-            </label>
-            <select
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-              value={painArea}
-              onChange={(e) => setPainArea(e.target.value)}
-            >
-              <option value="">선택하세요</option>
-              <option value="knee">무릎</option>
-              <option value="back">허리</option>
-              <option value="shoulder">어깨</option>
-              <option value="neck">목</option>
-              <option value="etc">기타</option>
-            </select>
+            <label className="text-sm font-semibold text-gray-800">성별</label>
+            <div className="flex gap-2">
+              {[
+                { value: "MALE" as Gender, label: "남성" },
+                { value: "FEMALE" as Gender, label: "여성" },
+                { value: "OTHER" as Gender, label: "기타" },
+              ].map((item) => {
+                const active = gender === item.value;
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setGender(item.value)}
+                    className={[
+                      "flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition",
+                      active
+                        ? "border-blue-500 bg-blue-50 text-blue-600"
+                        : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-white",
+                    ].join(" ")}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* 재활 목표 (선택) */}
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-800">
-              재활 목표 (선택)
-            </label>
-            <select
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-            >
-              <option value="">선택하세요 (선택)</option>
-              <option value="pain">통증 줄이기</option>
-              <option value="daily">일상생활 복귀</option>
-              <option value="sport">운동/스포츠 복귀</option>
-              <option value="health">전반적인 건강 관리</option>
-            </select>
+          {/* 나이 / 키 / 몸무게 */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-800">
+                나이
+              </label>
+              <input
+                type="number"
+                min={0}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-800">
+                키(cm)
+              </label>
+              <input
+                type="number"
+                min={0}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-800">
+                몸무게(kg)
+              </label>
+              <input
+                type="number"
+                min={0}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* 버튼 영역 – 스킵 제거 */}
-          <div className="mt-4">
+          {/* 버튼 */}
+          <div className="pt-2">
             <button
               type="submit"
-              disabled={!isValid}
+              disabled={!isValid || isSubmitting}
               className="w-full rounded-xl bg-black py-3 text-sm font-semibold text-white hover:bg-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              다음으로
+              {isSubmitting ? "저장 중..." : "다음 단계로"}
             </button>
           </div>
         </form>
