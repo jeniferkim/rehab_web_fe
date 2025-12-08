@@ -5,21 +5,37 @@ import { PainTrendChart } from "../components/home/PainTrendChart";
 import { useAuthStore } from "../stores/authStore";
 import type { RehabPlanSummary } from "../types/apis/rehab";
 import { rehabPlanApi } from "../apis/rehabPlanApi";
+import { exerciseLogApi } from "../apis/exerciseLogApi";
+import type { ExerciseLog } from "../types/apis/exerciseLog";
+import { calculateDailyRecoveryScore, calculateStreak } from "../utils/recovery";
+
+const formatDate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = `${date.getMonth() + 1}`.padStart(2, "0");
+  const d = `${date.getDate()}`.padStart(2, "0");
+  return `${y}-${m}-${d}`; // YYYY-MM-DD
+};
+
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  // 일단은 하드코딩된 값들 (나중에 API 연동하면 교체)
-  const todayRecoveryScore = 85;
-  const streakDays = 12;
-  const todayProgress = 40;
+  // 회복 점수 / 스트릭 / 진행률
+  const [todayRecoveryScore, setTodayRecoveryScore] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  const [todayProgress, setTodayProgress] = useState(0); // 나중에 별도 산식으로 교체
 
+  const [isLoadingScore, setIsLoadingScore] = useState(false);
+
+
+  // 현재 활성 플랜
   const [currentPlan, setCurrentPlan] = useState<RehabPlanSummary | null>(null);
   const [isLoadingPlan, setIsLoadingPlan] = useState(false);
 
 
   // 오늘 날짜 레이블
+  const today = new Date();
   const todayLabel = new Date().toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
@@ -27,8 +43,14 @@ const HomePage: React.FC = () => {
     weekday: "long",
   });
 
+  const displayName = user?.username || user?.email || "사용자";
+
+  /* ------------------------------------------------------------------ */
+  /*  1. 현재 활성 플랜 조회                                             */
+  /* ------------------------------------------------------------------ */
+
   useEffect(() => {
-    if (!user) return;
+    if (!user?.userId) return;
 
     let cancelled = false;
 
@@ -51,8 +73,84 @@ const HomePage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user?.userId]);
 
+
+  /* ------------------------------------------------------------------ */
+  /*  2. 운동 로그 기반 회복 점수 / 스트릭 계산                         */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (!user?.userId) return;
+
+    let cancelled = false;
+
+    const loadScoreAndStreak = async () => {
+      setIsLoadingScore(true);
+
+      try {
+        const todayStr = formatDate(today);
+
+        // 일단 최근 7일만 본다 (mock 기준)
+        const dates: string[] = [];
+        const tmpDate = new Date(today);
+
+        for (let i = 0; i < 7; i += 1) {
+          const copy = new Date(tmpDate);
+          copy.setDate(tmpDate.getDate() - i);
+          dates.push(formatDate(copy));
+        }
+
+        const results = await Promise.all(
+          dates.map((date) =>
+            exerciseLogApi.getLogsByDate({
+              userId: user.userId,
+              date,
+            }),
+          ),
+        );
+
+        const logsByDate: Record<string, ExerciseLog[]> = {};
+        results.forEach((res, idx) => {
+          logsByDate[dates[idx]] = res.logs ?? [];
+        });
+
+        const todayLogs = logsByDate[todayStr] ?? [];
+
+        const score = calculateDailyRecoveryScore(todayLogs);
+        const streak = calculateStreak({ logsByDate, today: todayStr });
+
+        // 진행률은 일단 간단하게: 오늘 로그가 1개라도 있으면 100, 아니면 0
+        const progress = todayLogs.length > 0 ? 100 : 0;
+
+        if (!cancelled) {
+          setTodayRecoveryScore(score);
+          setStreakDays(streak);
+          setTodayProgress(progress);
+        }
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          setTodayRecoveryScore(0);
+          setStreakDays(0);
+          setTodayProgress(0);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingScore(false);
+        }
+      }
+    };
+
+    loadScoreAndStreak();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.userId]);
+
+
+  /* ------------------------------------------------------------------ */
+  /*  3. 네비게이션 핸들러                                               */
+  /* ------------------------------------------------------------------ */
 
   const handleClickViewAllRoutines = () => {
     navigate("/app/routines");
@@ -67,7 +165,8 @@ const HomePage: React.FC = () => {
     navigate("/app/routines/${currentPlan.rehabPlanId}");
   };
 
-  const displayName = user?.username || user?.email || "사용자";
+
+
 
 
   return (
@@ -95,7 +194,9 @@ const HomePage: React.FC = () => {
             <span className="mb-1 text-sm font-semibold text-blue-600">점</span>
           </div>
           <p className="mt-2 text-sm text-gray-500">
-            빠른 회복을 축하합니다.
+            {isLoadingScore
+              ? "오늘 운동 기록을 불러오는 중이에요."
+              : "빠른 회복을 축하합니다."}
           </p>
         </div>
 
