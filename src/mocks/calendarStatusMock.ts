@@ -9,6 +9,7 @@ export type DayStatusMeta = {
   completionStatus: DayCompletionStatus;
   streakCount: number;
   painScore?: number;
+  recoveryScore: number,     
   hasExercise: boolean;
   hasMedication: boolean;
   hasReminder: boolean;
