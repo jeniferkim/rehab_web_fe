@@ -13,6 +13,8 @@ import ChatPage from './pages/ChatPage'
 import RoutineDetailPage from './pages/RoutineDetailPage'
 import OnboardingProfilePage from './pages/OnboardingProfilePage'
 import OnboardingAssessmentPage from './pages/OnboardingAccessmentPage'
+import ReportPage from './pages/ReportPage'
+
 
 function App() {
 
@@ -40,6 +42,7 @@ function App() {
 
             <Route path="calendar" element={<CalendarPage />} />
             <Route path="chat" element={<ChatPage />} />
+            <Route path="report" element={<ReportPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
 
