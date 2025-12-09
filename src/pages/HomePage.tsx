@@ -1,32 +1,173 @@
 // src/pages/HomePage.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  mockRoutineSummaryById,
-  mockTodayMainRoutineId,
-} from "../mocks/routineMocks";
 import { PainTrendChart } from "../components/home/PainTrendChart";
+import { useAuthStore } from "../stores/authStore";
+import type { RehabPlanSummary } from "../types/apis/rehab";
+import { rehabPlanApi } from "../apis/rehabPlanApi";
+import { exerciseLogApi } from "../apis/exerciseLogApi";
+import type { ExerciseLog } from "../types/apis/exerciseLog";
+import { calculateDailyRecoveryScore, calculateStreak } from "../utils/recovery";
+
+const formatDate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = `${date.getMonth() + 1}`.padStart(2, "0");
+  const d = `${date.getDate()}`.padStart(2, "0");
+  return `${y}-${m}-${d}`; // YYYY-MM-DD
+};
+
 
 const HomePage: React.FC = () => {
-  // 일단은 하드코딩된 값들 (나중에 API 연동하면 교체)
-  const email = "김지원";
-  const todayRecoveryScore = 85;
-  const streakDays = 12;
-  const todayProgress = 40;
-
   const navigate = useNavigate();
+  const { user } = useAuthStore();
 
-  // 오늘의 메인 루틴 (없을 수도 있으니 optional)
-  const todayRoutine = mockRoutineSummaryById[mockTodayMainRoutineId];
+  // 회복 점수 / 스트릭 / 진행률
+  const [todayRecoveryScore, setTodayRecoveryScore] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  const [todayProgress, setTodayProgress] = useState(0); // 나중에 별도 산식으로 교체
+
+  const [isLoadingScore, setIsLoadingScore] = useState(false);
+
+
+  // 현재 활성 플랜
+  const [currentPlan, setCurrentPlan] = useState<RehabPlanSummary | null>(null);
+  const [isLoadingPlan, setIsLoadingPlan] = useState(false);
+
+
+  // 오늘 날짜 레이블
+  const today = new Date();
+  const todayLabel = new Date().toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+
+  const displayName = user?.username || user?.email || "사용자";
+
+  /* ------------------------------------------------------------------ */
+  /*  1. 현재 활성 플랜 조회                                             */
+  /* ------------------------------------------------------------------ */
+
+  useEffect(() => {
+    if (!user?.userId) return;
+
+    let cancelled = false;
+
+    const fetchCurrentPlan = async () => {
+      setIsLoadingPlan(true);
+      try {
+        const plan = await rehabPlanApi.getCurrentPlanForUser(user.userId);
+        if (!cancelled) {
+          setCurrentPlan(plan);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPlan(false);
+        }
+      }
+    };
+
+    fetchCurrentPlan();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.userId]);
+
+
+  /* ------------------------------------------------------------------ */
+  /*  2. 운동 로그 기반 회복 점수 / 스트릭 계산                         */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (!user?.userId) return;
+
+    let cancelled = false;
+
+    const loadScoreAndStreak = async () => {
+      setIsLoadingScore(true);
+
+      try {
+        const todayStr = formatDate(today);
+
+        // 일단 최근 7일만 본다 (mock 기준)
+        const dates: string[] = [];
+        const tmpDate = new Date(today);
+
+        for (let i = 0; i < 7; i += 1) {
+          const copy = new Date(tmpDate);
+          copy.setDate(tmpDate.getDate() - i);
+          dates.push(formatDate(copy));
+        }
+
+        const results = await Promise.all(
+          dates.map((date) =>
+            exerciseLogApi.getLogsByDate({
+              userId: user.userId,
+              date,
+            }),
+          ),
+        );
+
+        const logsByDate: Record<string, ExerciseLog[]> = {};
+        results.forEach((res, idx) => {
+          logsByDate[dates[idx]] = res.logs ?? [];
+        });
+
+        const todayLogs = logsByDate[todayStr] ?? [];
+
+        const score = calculateDailyRecoveryScore(todayLogs);
+        const streak = calculateStreak({ logsByDate, today: todayStr });
+
+        // 진행률은 일단 간단하게: 오늘 로그가 1개라도 있으면 100, 아니면 0
+        const progress = todayLogs.length > 0 ? 100 : 0;
+
+        if (!cancelled) {
+          setTodayRecoveryScore(score);
+          setStreakDays(streak);
+          setTodayProgress(progress);
+        }
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          setTodayRecoveryScore(0);
+          setStreakDays(0);
+          setTodayProgress(0);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingScore(false);
+        }
+      }
+    };
+
+    loadScoreAndStreak();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.userId]);
+
+
+  /* ------------------------------------------------------------------ */
+  /*  3. 네비게이션 핸들러                                               */
+  /* ------------------------------------------------------------------ */
 
   const handleClickViewAllRoutines = () => {
     navigate("/app/routines");
   };
 
   const handleClickStartTodayRoutine = () => {
-    if (!todayRoutine) return;
-    navigate(`/app/routines/${todayRoutine.id}`);
+    if (!currentPlan) return;
+
+    // 아직 플랜 → 루틴 상세 라우트가 확정 안 됐으니
+    // 일단 루틴 목록으로만 보내고, 나중에 /app/routines/:planId 로 바꿔도 됨
+    // navigate(`/app/routines/${currentPlan.id}`);
+    navigate("/app/routines/${currentPlan.rehabPlanId}");
   };
+
+
+
+
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
@@ -34,9 +175,9 @@ const HomePage: React.FC = () => {
       <section className="mt-2">
         <p className="text-sm font-medium text-gray-500">홈</p>
         <h1 className="mt-3 text-3xl font-extrabold text-gray-900">
-          안녕하세요, {email}님!
+          안녕하세요, {displayName}님!
         </h1>
-        <p className="mt-1 text-sm text-gray-500">2025년 11월 27일 목요일</p>
+        <p className="mt-1 text-sm text-gray-500">{todayLabel}</p>
       </section>
 
       {/* 상단 카드: 오늘의 회복 점수 / 연속 달성 */}
@@ -53,7 +194,9 @@ const HomePage: React.FC = () => {
             <span className="mb-1 text-sm font-semibold text-blue-600">점</span>
           </div>
           <p className="mt-2 text-sm text-gray-500">
-            빠른 회복을 축하합니다.
+            {isLoadingScore
+              ? "오늘 운동 기록을 불러오는 중이에요."
+              : "빠른 회복을 축하합니다."}
           </p>
         </div>
 
@@ -90,7 +233,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 오늘의 루틴 카드 */}
+      {/* 오늘의 루틴 카드 – 현재 활성 플랜 기반 */}
       <section className="rounded-3xl bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-base font-semibold text-gray-900">
@@ -105,25 +248,22 @@ const HomePage: React.FC = () => {
           </button>
         </div>
 
-        {todayRoutine ? (
+        {isLoadingPlan ? (
+          <div className="rounded-2xl bg-gray-50 px-4 py-5 text-center text-xs text-gray-400">
+            오늘의 루틴을 불러오는 중이에요...
+          </div>
+        ) : currentPlan ? (
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-emerald-600">
-                오늘의 추천 루틴
+                현재 활성 재활 플랜
               </p>
               <h2 className="mt-1 text-sm font-semibold text-gray-900">
-                {todayRoutine.title}
+                {currentPlan.title}
               </h2>
               <p className="mt-1 text-xs text-gray-500">
-                {todayRoutine.level} · {todayRoutine.duration}
-                {todayRoutine.itemCount != null &&
-                  ` · 운동 ${todayRoutine.itemCount}개`}
+                {currentPlan.startDate} ~ {currentPlan.endDate} 진행 중
               </p>
-              {todayRoutine.timeRangeLabel && (
-                <p className="mt-1 text-[11px] text-gray-400">
-                  권장 시간대: {todayRoutine.timeRangeLabel}
-                </p>
-              )}
             </div>
 
             <button
@@ -136,13 +276,13 @@ const HomePage: React.FC = () => {
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-500">
-            아직 설정된 오늘의 루틴이 없어요. 루틴 페이지에서 내 루틴을
+            아직 활성화된 재활 플랜이 없어요. 루틴 페이지에서 내 루틴을
             만들어볼까요?
           </div>
         )}
       </section>
 
-      {/* 통증 감소 추이 (그래프 자리) */}
+      {/* 통증 감소 추이 (그래프) */}
       <section className="mb-4 rounded-3xl bg-white p-5 shadow-sm">
         <p className="mb-3 text-base font-semibold text-gray-900">
           통증 감소 추이
@@ -152,5 +292,6 @@ const HomePage: React.FC = () => {
     </div>
   );
 };
+
 
 export default HomePage;

@@ -1,3 +1,4 @@
+// src/mocks/calendarMocks.ts
 // 캘린더 페이지 mock
 // mockEventsByDate 같은 “날짜별 스케줄”
 

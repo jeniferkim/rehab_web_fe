@@ -1,21 +1,26 @@
+// 플랜 항목 목록 조회 → 항목에 들어있는 exerciseId로 운동 상세 여러 개 조회 → 합쳐서 RoutineDetailView 만들기
 // src/pages/RoutineDetailPage.tsx
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
-
-import { mockRoutineDetailById } from "../mocks/routineMocks";
 
 import RoutineVideoPlayer from "../components/routine/RoutineVideoPlayer";
 import RoutineExercisePlaylist from "../components/routine/RoutineExercisePlaylist";
 import RoutineInfoPanel from "../components/routine/RoutineInfoPanel";
 import RoutineEvidenceSection from "../components/routine/RoutineEvidenceSection";
-
 import NextExerciseBar from "../components/routine/NextExerciseBar";
 
-
-import type { RoutineDetailView, RoutineExercise } from "../types/apis/routine";
+import type {
+  RoutineDetailView,
+  RoutineExercise,
+  ExerciseSet,
+} from "../types/apis/routine";
 import { updateDayStatus } from "../mocks/calendarStatusMock";
 import { RoutineCompleteModal } from "../components/routine/RoutineCompleteModal";
 import { PainScoreModal } from "../components/routine/PainScoreModal";
+import { rehabPlanApi } from "../apis/rehabPlanApi";
+import { exerciseApi } from "../apis/exerciseApi";
+import { exerciseLogApi } from "../apis/exerciseLogApi";
+import { useAuthStore } from "../stores/authStore";
 
 // YYYY-MM-DD
 const formatDateKey = (date: Date) => {
@@ -25,15 +30,153 @@ const formatDateKey = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
-// 1. 껍데기: 데이터 유무만 판단
-const RoutineDetailPage = () => {
-  const { routineId } = useParams<{ routineId: string }>();
-  const routine = routineId ? mockRoutineDetailById[routineId] : undefined;
+// PlanItem.doses → ExerciseSet[] (백엔드 스키마 확정 전이니 any 기반으로 느슨하게 처리)
+const mapDosesToExerciseSets = (doses: any): ExerciseSet[] => {
+  if (!doses || !Array.isArray(doses)) return [];
 
-  if (!routine) {
+  return doses.map((dose: any, idx: number) => ({
+    setOrder: idx + 1,
+    reps: typeof dose.reps === "number" ? dose.reps : undefined,
+    holdSeconds:
+      typeof dose.holdSeconds === "number" ? dose.holdSeconds : undefined,
+    restSeconds:
+      typeof dose.restSeconds === "number" ? dose.restSeconds : undefined,
+  }));
+};
+
+// ExerciseDetail + PlanItem → RoutineExercise
+const buildRoutineExercise = (params: {
+  planItem: any;
+  detail: any;
+}): RoutineExercise => {
+  const { planItem, detail } = params;
+
+  const firstImage = detail.images?.[0];
+  const videoMedia = detail.media?.find(
+    (m: any) => m.type === "VIDEO" || m.type === "video",
+  );
+
+  const sets = mapDosesToExerciseSets(planItem.doses);
+
+  return {
+    id: planItem.planItemId,
+    exerciseId: detail.exerciseId,
+    name: detail.title,
+    bodyPart: detail.bodyPart ?? "",
+    difficulty: detail.difficulty,
+    thumbnailUrl: firstImage?.imageUrl,
+    videoUrl: videoMedia?.url,
+    caution:
+      typeof detail.contraindications?.summary === "string"
+        ? detail.contraindications.summary
+        : undefined,
+    sets,
+    estimatedMinutes: sets.length > 0 ? sets.length * 2 : undefined, // 대충 세트 수 * 2분
+  };
+};
+
+/* ------------------------------------------------------------------ */
+/*  1. 껍데기: 플랜/운동 API로부터 RoutineDetailView 로딩           */
+/* ------------------------------------------------------------------ */
+
+const RoutineDetailPage = () => {
+  const { routineId } = useParams<{ routineId: string }>(); // 라우트: /app/routines/:routineId (실제로는 rehabPlanId)
+  const [routine, setRoutine] = useState<RoutineDetailView | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!routineId) {
+      setLoadError("잘못된 루틴 ID입니다.");
+      return;
+    }
+
+    const rehabPlanId = Number(routineId);
+    if (Number.isNaN(rehabPlanId)) {
+      setLoadError("잘못된 루틴 ID 형식입니다.");
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadRoutine = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        const today = formatDateKey(new Date());
+
+        // 1) 오늘 날짜 기준 플랜 항목 조회
+        const planItemsByDate =
+          await rehabPlanApi.getPlanItemsByDate(rehabPlanId, today);
+        const items = planItemsByDate.items ?? [];
+
+        if (items.length === 0) {
+          if (!cancelled) {
+            setLoadError("오늘 진행할 운동이 없습니다.");
+          }
+          return;
+        }
+
+        // 2) 각 항목의 운동 상세 조회
+        const details = await Promise.all(
+          items.map((item: any) =>
+            exerciseApi.getExerciseDetail(item.exerciseId),
+          ),
+        );
+
+        // 3) RoutineExercise 리스트로 변환
+        const exercises: RoutineExercise[] = items.map(
+          (item: any, idx: number) =>
+            buildRoutineExercise({ planItem: item, detail: details[idx] }),
+        );
+
+        // 4) 최종 ViewModel 구성
+        const detailView: RoutineDetailView = {
+          id: rehabPlanId,
+          title: "오늘의 재활 루틴",
+          level: "초급", // TODO: 백엔드 플랜 레벨 나오면 매핑
+          duration: `${exercises.length * 5}분`, // 대략: 운동 개수 * 5분
+          exercises,
+          clinicalEvidence: [], // TODO: 나중에 실제 근거 데이터 연동
+        };
+
+        if (!cancelled) {
+          setRoutine(detailView);
+        }
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          setLoadError("루틴 정보를 불러오는 중 문제가 발생했습니다.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadRoutine();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [routineId]);
+
+  if (isLoading && !routine) {
     return (
       <div className="mx-auto max-w-5xl px-6 py-8">
-        <p className="text-sm text-gray-500">루틴 정보를 찾을 수 없습니다.</p>
+        <p className="text-sm text-gray-500">루틴 정보를 불러오는 중이에요…</p>
+      </div>
+    );
+  }
+
+  if (loadError || !routine) {
+    return (
+      <div className="mx-auto max-w-5xl px-6 py-8">
+        <p className="text-sm text-gray-500">
+          {loadError ?? "루틴 정보를 찾을 수 없습니다."}
+        </p>
       </div>
     );
   }
@@ -43,12 +186,17 @@ const RoutineDetailPage = () => {
 
 export default RoutineDetailPage;
 
-// 2. 실제 내용
+/* ------------------------------------------------------------------ */
+/*  2. 실제 내용: 기존 비즈니스 로직 그대로 유지                      */
+/* ------------------------------------------------------------------ */
+
 interface RoutineDetailPageContentProps {
   routine: RoutineDetailView;
 }
 
 const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) => {
+  const { user } = useAuthStore();
+
   /* 🔹 1) 기본 상태 */
   const totalExercises = routine.exercises.length;
 
@@ -86,7 +234,6 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
 
   const navigate = useNavigate();
 
-
   /* 🔹 3) 루틴 완료 처리 */
   const handleConfirmCompleteRoutine = () => {
     if (!isCompletedToday) {
@@ -113,7 +260,35 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
   };
 
   /* 🔹 4) 통증 점수 저장 */
-  const handleSubmitPainScore = () => {
+  const handleSubmitPainScore = async () => {
+    const loggedAt = new Date().toISOString();
+
+    // 1) 운동 로그 저장 (mock 기준)
+    if (user?.userId) {
+      try {
+        await Promise.all(
+          routine.exercises.map((ex) =>
+            exerciseLogApi.createExerciseLog({
+              userId: user.userId,
+              body: {
+                planItemId: ex.id,           // 우리는 planItemId를 RoutineExercise.id로 사용 중
+                loggedAt,
+                painAfter: painScore,
+                completionRate: 100,
+                // 필요하면 여기서 rpe, durationSec 등 추가
+              },
+            }),
+          ),
+        );
+        console.log("[Routine] exercise logs saved for routine", routine.id);
+      } catch (e) {
+        console.error("[Routine] save exercise logs failed", e);
+        // 일단 서비스 끊기지 않게 캘린더/네비게이션은 계속 진행
+      }
+    } else {
+      console.log("[Routine] user is null, skip exerciseLogApi");
+    }
+
     // ✅ 해당 날짜의 painScore만 업데이트
     updateDayStatus(todayKey, (prev) => ({
       completionStatus: prev?.completionStatus ?? "pending",
@@ -142,7 +317,7 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
           </p>
           <h1 className="mt-1 text-2xl font-bold text-gray-900">{routine.title}</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {routine.level} · {routine.duration} 루틴
+            {routine.level ?? "맞춤"} · {routine.duration ?? "약 20분"} 루틴
           </p>
           <p className="mt-1 text-xs text-gray-400">
             연속 {streak}일 진행 중 · 최고 {bestStreak}일
@@ -199,7 +374,7 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
             selectedId={currentExercise.id}
             onSelect={handleSelectExercise}
           />
-          <RoutineEvidenceSection evidences={routine.clinicalEvidence} />
+          <RoutineEvidenceSection evidences={routine.clinicalEvidence ?? []} />
         </aside>
       </main>
 

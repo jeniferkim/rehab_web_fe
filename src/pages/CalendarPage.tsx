@@ -1,12 +1,17 @@
 // src/pages/CalendarPage.tsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import CalendarMonthView from "../components/calendar/CalendarMonthView";
 import DayScheduleList from "../components/calendar/DayScheduleList";
 import { mockEventsByDate } from "../mocks/calendarMocks";
 import {
   mockDayStatusByDate,
   type DayCompletionStatus,
+  type DayStatusMeta,
 } from "../mocks/calendarStatusMock";
+import { useAuthStore } from "../stores/authStore";
+import type { ExerciseLog } from "../types/apis/exerciseLog";
+import { exerciseLogApi } from "../apis/exerciseLogApi";
+import { buildDayStatusFromLogs } from "../utils/buildDayStatusFromLogs";
 
 const formatDateLabel = (date: Date) => {
   const y = date.getFullYear();
@@ -22,8 +27,14 @@ const getStatusLabel = (status: DayCompletionStatus) => {
 };
 
 const CalendarPage: React.FC = () => {
+  const { user } = useAuthStore();
+
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [logs, setLogs] = useState<ExerciseLog[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [logsError, setLogsError] = useState<string | null>(null);
+
   const [currentMonth, setCurrentMonth] = useState(new Date(2025, 11, 4)); // 2025-12
-  const [selectedDate, setSelectedDate] = useState(new Date(2025, 11, 4));
 
   const handleChangeMonth = (offset: number) => {
     setCurrentMonth((prev) => {
@@ -33,9 +44,43 @@ const CalendarPage: React.FC = () => {
     });
   };
 
-  const handleSelectDate = (date: Date) => {
-    setSelectedDate(date);
-  };
+  useEffect(() => {
+    if (!user?.userId) return;
+
+    let cancelled = false;
+
+    const fetchLogs = async () => {
+      setIsLoadingLogs(true);
+      setLogsError(null);
+
+      try {
+        const dateStr = formatDateLabel(selectedDate);
+        const res = await exerciseLogApi.getLogsByDate({
+          userId: user.userId,
+          date: dateStr,
+        });
+
+        if (!cancelled) {
+          setLogs(res.logs ?? []);
+        }
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          setLogsError("운동 로그를 불러오는 중 문제가 생겼어요.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingLogs(false);
+        }
+      }
+    };
+
+    fetchLogs();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.userId, selectedDate]);
+
 
   const selectedDateLabel = useMemo(
     () => formatDateLabel(selectedDate),
@@ -43,7 +88,10 @@ const CalendarPage: React.FC = () => {
   );
 
   const events = mockEventsByDate[selectedDateLabel] ?? [];
-  const selectedDayStatus = mockDayStatusByDate[selectedDateLabel];
+  const selectedDayStatus: DayStatusMeta = useMemo(
+    () => buildDayStatusFromLogs(logs),
+    [logs],
+  );
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
@@ -56,7 +104,7 @@ const CalendarPage: React.FC = () => {
         currentMonth={currentMonth}
         selectedDate={selectedDate}
         onChangeMonth={handleChangeMonth}
-        onSelectDate={handleSelectDate}
+        onSelectDate={setSelectedDate}
         dayStatusByDate={mockDayStatusByDate}
       />
 
@@ -105,6 +153,58 @@ const CalendarPage: React.FC = () => {
 
         <DayScheduleList dateLabel={selectedDateLabel} events={events} />
       </section>
+
+      <section className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+        <h2 className="mb-2 text-sm font-semibold text-gray-900">
+          {formatDateLabel(selectedDate)} 운동 로그
+        </h2>
+
+        {isLoadingLogs && (
+          <p className="text-xs text-gray-500">로그 불러오는 중…</p>
+        )}
+
+        {logsError && (
+          <p className="text-xs text-red-500">{logsError}</p>
+        )}
+
+        {!isLoadingLogs && !logsError && logs.length === 0 && (
+          <p className="text-xs text-gray-400">
+            이 날짜에는 기록된 운동 로그가 없습니다.
+          </p>
+        )}
+
+        {!isLoadingLogs && logs.length > 0 && (
+          <ul className="space-y-2">
+            {logs.map((log) => (
+              <li
+                key={log.exerciseLogId}
+                className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2 text-xs"
+              >
+                <div>
+                  <p className="font-semibold text-gray-800">
+                    PlanItem #{log.planItemId}
+                  </p>
+                  <p className="text-[11px] text-gray-500">
+                    통증 {log.painBefore ?? "-"} → {log.painAfter ?? "-"} / RPE{" "}
+                    {log.rpe ?? "-"}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-blue-600">
+                    {log.completionRate}%
+                  </p>
+                  {log.durationSec && (
+                    <p className="text-[11px] text-gray-400">
+                      {(log.durationSec / 60).toFixed(0)}분
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
     </div>
   );
 };
