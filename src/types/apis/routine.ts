@@ -40,6 +40,17 @@ export type RoutineExercise = {
   caution?: string;
   sets: ExerciseSet[];
   estimatedMinutes?: number;
+
+  // ----- 여기부터 PlanItem 메타(스웨거 기반) 추가 -----
+  planItemId?: number;  // id와 별도로 진짜 planItemId가 필요하면 사용
+  phase?: string;       // "ACUTE" | "PHASE_1" ...
+  orderIndex?: number;
+  status?: string;      // "ACTIVE" 등
+  // dose는 나중에 타입 정리해도 되고, 일단 any/unknown 으로 시작해도 됨
+  dose?: unknown;
+  recommendationReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 
@@ -76,4 +87,8 @@ export type ClinicalEvidence = {
 export type RoutineDetailView = RoutineDetail & {
   exercises: RoutineExercise[];
   clinicalEvidence?: ClinicalEvidence[];
+
+  // Swagger 기반 메타 필드
+  rehabPlanId?: number; // = id 랑 사실상 같은 값일 수도 있음
+  date?: string;        // "YYYY-MM-DD"
 };

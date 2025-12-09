@@ -6,10 +6,12 @@ import { mockEventsByDate } from "../mocks/calendarMocks";
 import {
   mockDayStatusByDate,
   type DayCompletionStatus,
+  type DayStatusMeta,
 } from "../mocks/calendarStatusMock";
 import { useAuthStore } from "../stores/authStore";
 import type { ExerciseLog } from "../types/apis/exerciseLog";
 import { exerciseLogApi } from "../apis/exerciseLogApi";
+import { buildDayStatusFromLogs } from "../utils/buildDayStatusFromLogs";
 
 const formatDateLabel = (date: Date) => {
   const y = date.getFullYear();
@@ -86,7 +88,10 @@ const CalendarPage: React.FC = () => {
   );
 
   const events = mockEventsByDate[selectedDateLabel] ?? [];
-  const selectedDayStatus = mockDayStatusByDate[selectedDateLabel];
+  const selectedDayStatus: DayStatusMeta = useMemo(
+    () => buildDayStatusFromLogs(logs),
+    [logs],
+  );
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">

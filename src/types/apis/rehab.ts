@@ -27,7 +27,7 @@ export interface RehabPlanItem {
   orderIndex: number;
   status: PlanItemStatus;
   doses: any; // 나중에 BE에서 스키마 확정되면 타입 정교화
-  recommendationReason?: string;
+  recommendationReason?: string; // 얘도 확장해야함 {}
   createdAt: string;
   updatedAt: string;
 }
