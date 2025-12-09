@@ -1,7 +1,7 @@
 // src/pages/HomePage.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PainTrendChart } from "../components/home/PainTrendChart";
+import { PainTrendChart, type PainTrendItem } from "../components/home/PainTrendChart";
 import { useAuthStore } from "../stores/authStore";
 import type { RehabPlanSummary } from "../types/apis/rehab";
 import { rehabPlanApi } from "../apis/rehabPlanApi";
@@ -32,6 +32,8 @@ const HomePage: React.FC = () => {
   // 현재 활성 플랜
   const [currentPlan, setCurrentPlan] = useState<RehabPlanSummary | null>(null);
   const [isLoadingPlan, setIsLoadingPlan] = useState(false);
+
+  const [painTrendData, setPainTrendData] = useState<PainTrendItem[]>([]);
 
 
   // 오늘 날짜 레이블
@@ -109,15 +111,50 @@ const HomePage: React.FC = () => {
           ),
         );
 
-        const logsByDate: Record<string, ExerciseLog[]> = {};
+        const logsByDateMap: Record<string, ExerciseLog[]> = {};
         results.forEach((res, idx) => {
-          logsByDate[dates[idx]] = res.logs ?? [];
+          logsByDateMap[dates[idx]] = res.logs ?? [];
         });
 
-        const todayLogs = logsByDate[todayStr] ?? [];
+        const todayLogs = logsByDateMap[todayStr] ?? [];
 
         const score = calculateDailyRecoveryScore(todayLogs);
-        const streak = calculateStreak({ logsByDate, today: todayStr });
+        const streak = calculateStreak({ logsByDate: logsByDateMap, today: todayStr });
+
+        // 2) 통증 추이용 데이터 만들기 (최근 7일 기준)
+        const trendItems: PainTrendItem[] = dates
+          .slice()           // 원본 dates를 그대로 사용
+          .reverse()         // 오래된 날짜 → 최신 날짜 순으로 그리고 싶으면
+          .map((date) => {
+            const logs = logsByDateMap[date] ?? [];
+
+            const painBeforeVals = logs
+              .map((log) => log.painBefore)
+              .filter((v): v is number => typeof v === "number");
+            const painAfterVals = logs
+              .map((log) => log.painAfter)
+              .filter((v): v is number => typeof v === "number");
+
+            const avg = (arr: number[]) =>
+              arr.length
+                ? Math.round(arr.reduce((sum, v) => sum + v, 0) / arr.length)
+                : 0;
+
+            const painBefore = avg(painBeforeVals);
+            const painAfter = avg(painAfterVals);
+
+            // "YYYY-MM-DD" → "MM/DD"로 라벨 변환
+            const [, mm, dd] = date.split("-");
+            const dateLabel = `${mm}/${dd}`;
+
+            return { dateLabel, painBefore, painAfter };
+          });
+
+        // 3) 상태 반영
+        if (!cancelled) {
+          setPainTrendData(trendItems);
+        }
+
 
         // 진행률은 일단 간단하게: 오늘 로그가 1개라도 있으면 100, 아니면 0
         const progress = todayLogs.length > 0 ? 100 : 0;
@@ -127,25 +164,25 @@ const HomePage: React.FC = () => {
           setStreakDays(streak);
           setTodayProgress(progress);
         }
-      } catch (e) {
-        console.error(e);
-        if (!cancelled) {
-          setTodayRecoveryScore(0);
-          setStreakDays(0);
-          setTodayProgress(0);
+        } catch (e) {
+          console.error(e);
+          if (!cancelled) {
+            setTodayRecoveryScore(0);
+            setStreakDays(0);
+            setTodayProgress(0);
+          }
+        } finally {
+          if (!cancelled) {
+            setIsLoadingScore(false);
+          }
         }
-      } finally {
-        if (!cancelled) {
-          setIsLoadingScore(false);
-        }
-      }
-    };
+      };
 
-    loadScoreAndStreak();
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.userId]);
+      loadScoreAndStreak();
+      return () => {
+        cancelled = true;
+      };
+    }, [user?.userId]);
 
 
   /* ------------------------------------------------------------------ */
@@ -287,7 +324,7 @@ const HomePage: React.FC = () => {
         <p className="mb-3 text-base font-semibold text-gray-900">
           통증 감소 추이
         </p>
-        <PainTrendChart />
+        <PainTrendChart data={painTrendData} />
       </section>
     </div>
   );

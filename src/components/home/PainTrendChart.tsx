@@ -10,7 +10,7 @@ import {
   Legend,
 } from "recharts";
 
-type PainTrendItem = {
+export type PainTrendItem = {
   dateLabel: string;   // "11/28" 이런 식으로 표시용 라벨
   painBefore: number;  // 운동 전 통증
   painAfter: number;   // 운동 후 통증
@@ -27,12 +27,18 @@ const MOCK_PAIN_TREND: PainTrendItem[] = [
   { dateLabel: "12/04", painBefore: 3, painAfter: 0 },
 ];
 
-export const PainTrendChart = () => {
+type PainTrendChartProps = {
+  data?: PainTrendItem[]; // 실데이터 (없으면 mock 사용)
+};
+
+export const PainTrendChart: React.FC<PainTrendChartProps> = ({ data }) => {
+  const chartData = data && data.length > 0 ? data : MOCK_PAIN_TREND;
+
   return (
     <div className="h-40 w-full rounded-2xl bg-gray-50 px-3 py-2">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={MOCK_PAIN_TREND}
+          data={chartData}
           barCategoryGap={16}
           margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
         >
