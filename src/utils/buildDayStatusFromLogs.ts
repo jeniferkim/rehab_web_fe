@@ -3,6 +3,7 @@
 
 import type { ExerciseLog } from "../types/apis/exerciseLog";
 import type { DayStatusMeta, DayCompletionStatus } from "../mocks/calendarStatusMock";
+import { calculateDailyRecoveryScore } from "./recovery";
 
 /**
  * 하루치 ExerciseLog[] 를 받아서
@@ -78,11 +79,14 @@ export const buildDayStatusFromLogs = (
   const hasMedication = false; // 추후 medication log interface 생기면 교체
   const hasReminder = false;
 
+  const recoveryScore = calculateDailyRecoveryScore(logs);
+
   return {
     completionStatus,
     streakCount: 0, // 여러 날짜 DayStatus 생성 후 채우는 단계에서 계산
     painScore,
     hasExercise,
+    recoveryScore,
     hasMedication,
     hasReminder,
   };

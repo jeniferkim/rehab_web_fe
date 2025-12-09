@@ -146,6 +146,8 @@ const CalendarPage: React.FC = () => {
                   ` · 연속 ${selectedDayStatus.streakCount}일`}
                 {selectedDayStatus.painScore != null &&
                   ` · 통증 ${selectedDayStatus.painScore}점`}
+                {selectedDayStatus.recoveryScore != null &&
+                  ` · 회복 점수 ${selectedDayStatus.recoveryScore}점`}
               </p>
             )}
           </div>
