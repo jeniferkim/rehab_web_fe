@@ -308,14 +308,16 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
 
   /* 🔹 5) 렌더링 */
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-8 lg:px-8">
       {/* 상단 헤더 */}
-      <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-emerald-600">
             내 루틴
           </p>
-          <h1 className="mt-1 text-2xl font-bold text-gray-900">{routine.title}</h1>
+          <h1 className="mt-1 text-2xl font-bold text-gray-900">
+            {routine.title}
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
             {routine.level ?? "맞춤"} · {routine.duration ?? "약 20분"} 루틴
           </p>
@@ -353,28 +355,53 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
         </div>
       </header>
 
-      {/* 메인 */}
-      <main className="grid gap-6 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1.2fr)]">
-        {/* 왼쪽: 비디오 + 정보 + 다음 운동 바 */}
-        <section className="space-y-4">
-          <RoutineVideoPlayer exercise={currentExercise} />
-          <RoutineInfoPanel routine={routine} exercise={currentExercise} />
+      {/* 메인 레이아웃 */}
+      <main className="grid gap-8 lg:grid-cols-[minmax(0,3.1fr)_minmax(320px,1.2fr)] xl:items-start">
+        {/* 왼쪽: 큰 비디오 + 진행 영역 */}
+        <section className="space-y-5">
+          {/* 비디오 영역 */}
+          <div className="aspect-video min-h-[360px] overflow-hidden rounded-2xl border border-slate-800/60 bg-black shadow-xl md:min-h-[420px] xl:min-h-[480px]">
+            <RoutineVideoPlayer exercise={currentExercise} />
+          </div>
+
+          {/* 다음 운동 진행 바 (리모컨 느낌) */}
           <NextExerciseBar
             currentIndex={currentIndex}
             total={totalExercises}
             currentExercise={currentExercise}
             onNext={handleNextExercise}
           />
+
+          {/* 루틴/운동 정보 카드들 – 따라 하기에는 2순위 정보라 아래로 */}
+          <RoutineInfoPanel routine={routine} exercise={currentExercise} />
+
+          <RoutineEvidenceSection
+            evidences={routine.clinicalEvidence ?? []}
+          />
         </section>
 
-        {/* 오른쪽: 운동 리스트 + 임상 근거 */}
-        <aside className="space-y-4">
+        {/* 오른쪽: 운동 리스트만, 스크롤해도 고정 */}
+        <aside className="space-y-4 lg:sticky lg:top-24">
           <RoutineExercisePlaylist
             exercises={routine.exercises}
             selectedId={currentExercise.id}
             onSelect={handleSelectExercise}
           />
-          <RoutineEvidenceSection evidences={routine.clinicalEvidence ?? []} />
+
+          {/* 작은 진행 요약 카드 (옵션) */}
+          <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-xs text-gray-600">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-gray-800">
+                오늘 루틴 진행 상황
+              </span>
+              <span>
+                {currentIndex + 1} / {totalExercises} 세션
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-gray-500">
+              오른쪽 리스트에서 다른 운동을 선택해 바로 이동할 수 있어요.
+            </p>
+          </div>
         </aside>
       </main>
 
@@ -395,4 +422,5 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
       />
     </div>
   );
+
 };
