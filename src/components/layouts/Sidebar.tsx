@@ -16,6 +16,7 @@ const navItems = [
   { label: "루틴", to: "/app/routines", icon: HiOutlineClipboardDocumentList },
   { label: "캘린더", to: "/app/calendar", icon: HiOutlineCalendarDays },
   { label: "AI 채팅", to: "/app/chat", icon: HiOutlineChatBubbleLeftRight },
+  { label: "리포트", to: "/app/report", icon: HiOutlineChatBubbleLeftRight },
   { label: "설정", to: "/app/settings", icon: HiOutlineCog6Tooth },
 ];
 
