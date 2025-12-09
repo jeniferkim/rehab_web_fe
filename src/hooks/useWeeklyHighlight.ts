@@ -13,7 +13,7 @@ export const useWeeklyHighlight = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user?.userId) return;
+    // if (!user?.userId) return; // 실제 연동할 때 풀면 됨
 
     let cancelled = false;
 
