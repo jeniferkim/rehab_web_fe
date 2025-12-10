@@ -1,3 +1,4 @@
+// 이거 스웨거 보고 맞춰놓은거임. 나중에 이넘만 수정해용
 // src/types/apis/intake.ts
 
 // 백엔드 enum이 있다면 여기에 맞춰 union 으로 조정해도 됨

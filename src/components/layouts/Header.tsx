@@ -1,10 +1,24 @@
 // src/components/layout/Header.jsx
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../stores/authStore";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
 
+  const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
+
+  // 유저 정보 읽어오기
+  const user = useAuthStore((s) => s.user);
+
+
   const toggleDropdown = () => setOpen((prev) => !prev);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-6">
@@ -24,11 +38,14 @@ export default function Header() {
           onClick={toggleDropdown}
           className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm hover:bg-gray-100"
         >
+          {/* 프로필 동그라미 (이니셜) */}
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">
-            J
+            {user?.username ? user.username[0].toUpperCase() : "?"}
           </div>
+
+          {/* 이름 */}
           <span className="hidden text-sm font-medium text-gray-800 sm:inline">
-            사용자 이름
+            {user?.username ?? "사용자"}
           </span>
           <span className="text-xs text-gray-500">▼</span>
         </button>
@@ -42,7 +59,10 @@ export default function Header() {
               설정
             </button>
             <div className="my-1 border-t" />
-            <button className="block w-full px-3 py-2 text-left text-red-500 hover:bg-red-50">
+            <button 
+              onClick={handleLogout}
+              className="block w-full px-3 py-2 text-left text-red-500 hover:bg-red-50"
+            >
               로그아웃
             </button>
           </div>

@@ -14,11 +14,7 @@ type AuthState = {
 
   // 로그인 관련
   login: (params: { email: string; password: string }) => Promise<void>;
-  signup: (params: {
-    email: string;
-    password: string;
-    phone?: string;
-  }) => Promise<void>;
+  signup: (params: { email: string; password: string}) => Promise<void>;
   logout: () => void;
   setUser: (user: AppUser | null) => void;
 
@@ -59,7 +55,9 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      signup: async ({ email, password, phone }) => {
+      signup: async ({ email, password }) => {
+        // TODO: 여기서 실제 POST /auth/signup 호출하면 됨
+        //      body: { email, password, passwordCheck: password }
         await new Promise((r) => setTimeout(r, 500));
       },
 
@@ -82,6 +80,7 @@ export const useAuthStore = create<AuthState>()(
           onboardingStep: step,
         })),
 
+      // 온보딩 끝났을 때 IntakeResult + 유저 상태 업데이트
       completeOnboarding: (intake) =>
         set((state) => ({
           intakeResult: intake,
@@ -97,7 +96,8 @@ export const useAuthStore = create<AuthState>()(
         })),
     }),
     {
-      name: "rehab-auth",
+      name: "rehab-auth", // ← localStorage key
+      // 로컬에 저장할 필드만 선택
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,

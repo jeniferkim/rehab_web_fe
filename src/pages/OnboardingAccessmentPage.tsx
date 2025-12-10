@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { intakeApi } from "../apis/intakeApi";
+import type { IntakeResult } from "../types/apis/intake";
 
 const MSK_REGIONS = [
   "목 / 어깨",
@@ -34,7 +35,7 @@ function triageRisk(painScore: number): RiskLevel {
 
 const OnboardingAssessmentPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, setUser } = useAuthStore();
+  const { user, setUser, completeOnboarding } = useAuthStore();
 
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [painScore, setPainScore] = useState<number | null>(null);
@@ -74,26 +75,36 @@ const OnboardingAssessmentPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const payload = {
-        painArea: mapRegionToPainAreaCode(selectedRegion),
+        painArea: mapRegionToPainAreaCode(selectedRegion!),
         painLevel: painScore,
         goal: finalGoal,
         exerciseExperience: "BEGINNER" as const,
         symptomDetail,
       };
 
-      // 나중에 실제 서버 연동 시 여기만 교체하면 됨
-      // await intakeApi.upsertMyIntake(payload);
+      // 1) 나중에 실제 서버 연동 시:
+      // const res = await intakeApi.upsertMyIntake(payload);
+      // const intakeResult: IntakeResult = res.result; // swagger 구조에 맞게
 
-      // 데모용: 콘솔에만 출력
+      // 2) 지금은 데모용 mock IntakeResult 생성
+
+      const now = new Date().toISOString();
+      const intakeResult: IntakeResult = {
+        intakeId: 1, // 나중에 백엔드 값으로 교체
+        painArea: payload.painArea,
+        painLevel: payload.painLevel,
+        goal: payload.goal,
+        exerciseExperience: payload.exerciseExperience,
+        createdAt: now,
+        updatedAt: now,
+      };
+
       console.log("[Mock] /users/me/intake 요청 바디:", payload);
+      console.log("[Mock] intakeResult:", intakeResult);
 
-      // 온보딩 완료 플래그를 프론트 유저 객체에 표시
-      if (user) {
-        setUser({
-          ...user,
-          onboardingCompleted: true,
-        });
-      }
+      // ✅ 온보딩 완료 처리 (authStore + localStorage에 모두 저장)
+      completeOnboarding(intakeResult);
+
 
       navigate("/app/home", { replace: true });
     } finally {

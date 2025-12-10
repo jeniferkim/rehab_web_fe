@@ -22,7 +22,7 @@ const LoginPage: React.FC = () => {
     setErrorMsg(null);
 
     if (!email || !password) {
-      setErrorMsg("아이디와 비밀번호를 모두 입력해 주세요.");
+      setErrorMsg("이메일와 비밀번호를 모두 입력해 주세요.");
       return;
     }
 
@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
         navigate("/app/home", { replace: true });
       }
     } catch (error) {
-      setErrorMsg("아이디 또는 비밀번호가 올바르지 않습니다.");
+      setErrorMsg("이메일 또는 비밀번호가 올바르지 않습니다.");
     } finally {
       setIsSubmitting(false);
     }
@@ -72,7 +72,7 @@ const LoginPage: React.FC = () => {
           <div>
             <input
               type="text"
-              placeholder="아이디"
+              placeholder="이메일"
               className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
