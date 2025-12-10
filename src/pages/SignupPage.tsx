@@ -8,24 +8,13 @@ const SignupPage: React.FC = () => {
   const signup = useAuthStore((state) => state.signup);
   const login = useAuthStore((state) => state.login);
 
-  const [email, setemail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [verifyCode, setVerifyCode] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordCheck, setPasswordCheck] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [idCheckMsg, setIdCheckMsg] = useState<string | null>(null);
 
-  const handleIdCheck = () => {
-    if (!email) {
-      setIdCheckMsg("아이디를 먼저 입력해 주세요.");
-      return;
-    }
-    // TODO: 실제 아이디 중복확인 API 호출
-    setIdCheckMsg("사용 가능한 아이디입니다.");
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +34,7 @@ const SignupPage: React.FC = () => {
       setIsSubmitting(true);
 
       // 1) 회원가입
-      await signup({ email, password, phone });
+      await signup({ email, password });
 
       // 2) 자동 로그인
       await login({ email, password });
@@ -79,83 +68,19 @@ const SignupPage: React.FC = () => {
 
         {/* 폼 */}
         <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* 아이디 */}
+          {/* 이메일 */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-800">아이디</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="아이디를 입력하세요"
-                className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-                value={email}
-                onChange={(e) => {
-                  setemail(e.target.value);
-                  setIdCheckMsg(null);
-                }}
-                autoComplete="email"
-              />
-              <button
-                type="button"
-                onClick={handleIdCheck}
-                className="whitespace-nowrap rounded-xl bg-black px-3 py-2 text-xs font-semibold text-white hover:bg-gray-900"
-              >
-                중복확인
-              </button>
-            </div>
-
-            {idCheckMsg && (
-              <p className="rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-700">
-                {idCheckMsg}
-              </p>
-            )}
+            <label className="text-sm font-semibold text-gray-800">이메일</label>
+            <input
+              type="email"
+              placeholder="이메일 주소를 입력하세요"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+            />
           </div>
-
-          {/* 휴대폰 번호 + 인증 */}
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-800">
-                휴대폰 번호
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="tel"
-                  placeholder="01012345678"
-                  className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="whitespace-nowrap rounded-xl bg-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-400"
-                  onClick={() => {
-                    alert("인증번호 발송 기능은 추후 제공됩니다.");
-                  }}
-                >
-                  인증번호
-                </button>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="인증번호 6자리"
-                className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-                value={verifyCode}
-                onChange={(e) => setVerifyCode(e.target.value)}
-              />
-              <button
-                type="button"
-                className="whitespace-nowrap rounded-xl bg-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-400"
-                onClick={() => {
-                  alert("인증 완료 기능은 추후 제공됩니다.");
-                }}
-              >
-                인증완료
-              </button>
-            </div>
-          </div>
-
+        
           {/* 비밀번호 */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-800">
