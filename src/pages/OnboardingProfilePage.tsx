@@ -45,27 +45,33 @@ const OnboardingProfilePage: React.FC = () => {
     // const updated = await userApi.updateMe(payload);
     // setUser({ ...user, ...updated, profileCompleted: true });
 
-    await new Promise((r) => setTimeout(r, 300)); // 데모용 딜레이
+    // await new Promise((r) => setTimeout(r, 300)); // 데모용 딜레이
 
     // 나중에 이거 주석 풀면 됨.
-    // try {
-    //   const payload = {
-    //     username: username.trim(),
-    //     gender: gender as Gender,
-    //     age: Number(age),
-    //     height: Number(height),
-    //     weight: Number(weight),
-    //   };
+      // 1) 나중에 실제 API 붙일 때 사용할 payload
+      const payload = {
+        username: username.trim(),
+        gender: gender as Gender,
+        age: Number(age),
+        height: Number(height),
+        weight: Number(weight),
+      };
 
-    //   // 1) 서버에 프로필 저장
-    //   const updated = await userApi.updateMe(payload);
+      // 2) 프론트 상태 업데이트 (profileCompleted 반영)
+      setUser({
+        ...user,
+        // ...updated,
+        ...payload,
+        profileCompleted: true,
+      });
 
-    //   // 2) 프론트 상태 업데이트 (profileCompleted 반영)
-    //   setUser({
-    //     ...user,
-    //     ...updated,
-    //     profileCompleted: true,
-    //   });
+      // 2) 나중에 진짜 서버 호출 붙일 땐 이렇게 바꾸면 됨
+      // const updated = await userApi.updateMe(payload);
+      // setUser({
+      //   ...user,
+      //   ...updated,
+      //   profileCompleted: true,
+      // });
 
       // 3) 다음 단계(문진)로 이동
       navigate("/onboarding/assessment", { replace: true });

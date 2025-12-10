@@ -3,13 +3,16 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 
 export const ProtectedAppRoute = () => {
-  const { user } = useAuthStore();
+  const { user, onboardingStep, intakeResult } = useAuthStore();
 
-  if (!user) return <Navigate to="/login" replace />;
+  // 2) 온보딩 완료 여부 판단
+  const hasCompletedOnboarding =
+    !!user.onboardingCompleted || !!intakeResult || onboardingStep >= 99;
 
-  if (!user.onboardingCompleted) {
+  if (!hasCompletedOnboarding) {
     return <Navigate to="/onboarding/profile" replace />;
   }
 
+  // 3) 다 통과하면 /app/* 렌더
   return <Outlet />;
 };
