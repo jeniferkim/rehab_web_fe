@@ -17,7 +17,6 @@ type AuthState = {
   signup: (params: {
     email: string;
     password: string;
-    phone?: string;
   }) => Promise<void>;
   logout: () => void;
   setUser: (user: AppUser | null) => void;
@@ -59,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      signup: async ({ email, password, phone }) => {
+      signup: async ({ email, password }) => {
         await new Promise((r) => setTimeout(r, 500));
       },
 
