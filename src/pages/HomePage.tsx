@@ -8,6 +8,8 @@ import { rehabPlanApi } from "../apis/rehabPlanApi";
 import { exerciseLogApi } from "../apis/exerciseLogApi";
 import type { ExerciseLog } from "../types/apis/exerciseLog";
 import { calculateDailyRecoveryScore, calculateStreak } from "../utils/recovery";
+import { useExerciseLogStore } from "../stores/exerciseLogStore";
+import { useRehabPlanStore } from "../stores/rehabPlanStore";
 
 const formatDate = (date: Date) => {
   const y = date.getFullYear();
@@ -20,6 +22,9 @@ const formatDate = (date: Date) => {
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const logsByDate = useExerciseLogStore((s) => s.logsByDate);
+  
+
 
   // 회복 점수 / 스트릭 / 진행률
   const [todayRecoveryScore, setTodayRecoveryScore] = useState(0);
@@ -30,7 +35,8 @@ const HomePage: React.FC = () => {
 
 
   // 현재 활성 플랜
-  const [currentPlan, setCurrentPlan] = useState<RehabPlanSummary | null>(null);
+  const { currentPlan } = useRehabPlanStore(); // 얘는 시연용
+  // const [currentPlan, setCurrentPlan] = useState<RehabPlanSummary | null>(null);
   const [isLoadingPlan, setIsLoadingPlan] = useState(false);
 
   const [painTrendData, setPainTrendData] = useState<PainTrendItem[]>([]);
@@ -81,108 +87,172 @@ const HomePage: React.FC = () => {
   /* ------------------------------------------------------------------ */
   /*  2. 운동 로그 기반 회복 점수 / 스트릭 계산                         */
   /* ------------------------------------------------------------------ */
+  // useEffect(() => {
+  //   if (!user?.userId) return;
+
+  //   let cancelled = false;
+
+  //   const loadScoreAndStreak = async () => {
+  //     setIsLoadingScore(true);
+
+  //     try {
+  //       const todayStr = formatDate(today);
+
+  //       // 일단 최근 7일만 본다 (mock 기준)
+  //       const dates: string[] = [];
+  //       const tmpDate = new Date(today);
+
+  //       for (let i = 0; i < 7; i += 1) {
+  //         const copy = new Date(tmpDate);
+  //         copy.setDate(tmpDate.getDate() - i);
+  //         dates.push(formatDate(copy));
+  //       }
+
+  //       const results = await Promise.all(
+  //         dates.map((date) =>
+  //           exerciseLogApi.getLogsByDate({
+  //             userId: user.userId,
+  //             date,
+  //           }),
+  //         ),
+  //       );
+
+  //       const logsByDateMap: Record<string, ExerciseLog[]> = {};
+  //       results.forEach((res, idx) => {
+  //         logsByDateMap[dates[idx]] = res.logs ?? [];
+  //       });
+
+  //       const todayLogs = logsByDateMap[todayStr] ?? [];
+
+  //       const score = calculateDailyRecoveryScore(todayLogs);
+  //       const streak = calculateStreak({ logsByDate: logsByDateMap, today: todayStr });
+
+  //       // 2) 통증 추이용 데이터 만들기 (최근 7일 기준)
+  //       const trendItems: PainTrendItem[] = dates
+  //         .slice()           // 원본 dates를 그대로 사용
+  //         .reverse()         // 오래된 날짜 → 최신 날짜 순으로 그리고 싶으면
+  //         .map((date) => {
+  //           const logs = logsByDateMap[date] ?? [];
+
+  //           const painBeforeVals = logs
+  //             .map((log) => log.painBefore)
+  //             .filter((v): v is number => typeof v === "number");
+  //           const painAfterVals = logs
+  //             .map((log) => log.painAfter)
+  //             .filter((v): v is number => typeof v === "number");
+
+  //           const avg = (arr: number[]) =>
+  //             arr.length
+  //               ? Math.round(arr.reduce((sum, v) => sum + v, 0) / arr.length)
+  //               : 0;
+
+  //           const painBefore = avg(painBeforeVals);
+  //           const painAfter = avg(painAfterVals);
+
+  //           // "YYYY-MM-DD" → "MM/DD"로 라벨 변환
+  //           const [, mm, dd] = date.split("-");
+  //           const dateLabel = `${mm}/${dd}`;
+
+  //           return { dateLabel, painBefore, painAfter };
+  //         });
+
+  //       // 3) 상태 반영
+  //       if (!cancelled) {
+  //         setPainTrendData(trendItems);
+  //       }
+
+
+  //       // 진행률은 일단 간단하게: 오늘 로그가 1개라도 있으면 100, 아니면 0
+  //       const progress = todayLogs.length > 0 ? 100 : 0;
+
+  //       if (!cancelled) {
+  //         setTodayRecoveryScore(score);
+  //         setStreakDays(streak);
+  //         setTodayProgress(progress);
+  //       }
+  //       } catch (e) {
+  //         console.error(e);
+  //         if (!cancelled) {
+  //           setTodayRecoveryScore(0);
+  //           setStreakDays(0);
+  //           setTodayProgress(0);
+  //         }
+  //       } finally {
+  //         if (!cancelled) {
+  //           setIsLoadingScore(false);
+  //         }
+  //       }
+  //     };
+
+  //     loadScoreAndStreak();
+  //     return () => {
+  //       cancelled = true;
+  //     };
+  //   }, [user?.userId]);
+
   useEffect(() => {
     if (!user?.userId) return;
 
-    let cancelled = false;
+    const today = new Date();
+    const todayStr = formatDate(today);
 
-    const loadScoreAndStreak = async () => {
-      setIsLoadingScore(true);
+    // 최근 7일 날짜 리스트 만들기
+    const dates: string[] = [];
+    const tmpDate = new Date(today);
 
-      try {
-        const todayStr = formatDate(today);
+    for (let i = 0; i < 7; i += 1) {
+      const copy = new Date(tmpDate);
+      copy.setDate(tmpDate.getDate() - i);
+      dates.push(formatDate(copy));
+    }
 
-        // 일단 최근 7일만 본다 (mock 기준)
-        const dates: string[] = [];
-        const tmpDate = new Date(today);
-
-        for (let i = 0; i < 7; i += 1) {
-          const copy = new Date(tmpDate);
-          copy.setDate(tmpDate.getDate() - i);
-          dates.push(formatDate(copy));
-        }
-
-        const results = await Promise.all(
-          dates.map((date) =>
-            exerciseLogApi.getLogsByDate({
-              userId: user.userId,
-              date,
-            }),
-          ),
-        );
-
-        const logsByDateMap: Record<string, ExerciseLog[]> = {};
-        results.forEach((res, idx) => {
-          logsByDateMap[dates[idx]] = res.logs ?? [];
-        });
-
-        const todayLogs = logsByDateMap[todayStr] ?? [];
-
-        const score = calculateDailyRecoveryScore(todayLogs);
-        const streak = calculateStreak({ logsByDate: logsByDateMap, today: todayStr });
-
-        // 2) 통증 추이용 데이터 만들기 (최근 7일 기준)
-        const trendItems: PainTrendItem[] = dates
-          .slice()           // 원본 dates를 그대로 사용
-          .reverse()         // 오래된 날짜 → 최신 날짜 순으로 그리고 싶으면
-          .map((date) => {
-            const logs = logsByDateMap[date] ?? [];
-
-            const painBeforeVals = logs
-              .map((log) => log.painBefore)
-              .filter((v): v is number => typeof v === "number");
-            const painAfterVals = logs
-              .map((log) => log.painAfter)
-              .filter((v): v is number => typeof v === "number");
-
-            const avg = (arr: number[]) =>
-              arr.length
-                ? Math.round(arr.reduce((sum, v) => sum + v, 0) / arr.length)
-                : 0;
-
-            const painBefore = avg(painBeforeVals);
-            const painAfter = avg(painAfterVals);
-
-            // "YYYY-MM-DD" → "MM/DD"로 라벨 변환
-            const [, mm, dd] = date.split("-");
-            const dateLabel = `${mm}/${dd}`;
-
-            return { dateLabel, painBefore, painAfter };
-          });
-
-        // 3) 상태 반영
-        if (!cancelled) {
-          setPainTrendData(trendItems);
-        }
+    console.log("[Home] logsByDate:", logsByDate);
 
 
-        // 진행률은 일단 간단하게: 오늘 로그가 1개라도 있으면 100, 아니면 0
-        const progress = todayLogs.length > 0 ? 100 : 0;
+    // 1) 오늘 로그
+    const todayLogs = logsByDate[todayStr] ?? [];
 
-        if (!cancelled) {
-          setTodayRecoveryScore(score);
-          setStreakDays(streak);
-          setTodayProgress(progress);
-        }
-        } catch (e) {
-          console.error(e);
-          if (!cancelled) {
-            setTodayRecoveryScore(0);
-            setStreakDays(0);
-            setTodayProgress(0);
-          }
-        } finally {
-          if (!cancelled) {
-            setIsLoadingScore(false);
-          }
-        }
-      };
+    // 2) 회복 점수 / 스트릭 계산
+    const score = calculateDailyRecoveryScore(todayLogs);
+    const streak = calculateStreak({ logsByDate, today: todayStr });
 
-      loadScoreAndStreak();
-      return () => {
-        cancelled = true;
-      };
-    }, [user?.userId]);
+    // 3) 통증 추이 데이터 생성
+    const trendItems: PainTrendItem[] = dates
+      .slice()
+      .reverse() // 오래된 날짜 → 최신 날짜
+      .map((date) => {
+        const logs = logsByDate[date] ?? [];
+
+        const painBeforeVals = logs
+          .map((log) => log.painBefore)
+          .filter((v): v is number => typeof v === "number");
+        const painAfterVals = logs
+          .map((log) => log.painAfter)
+          .filter((v): v is number => typeof v === "number");
+
+        const avg = (arr: number[]) =>
+          arr.length
+            ? Math.round(arr.reduce((sum, v) => sum + v, 0) / arr.length)
+            : 0;
+
+        const painBefore = avg(painBeforeVals);
+        const painAfter = avg(painAfterVals);
+
+        const [, mm, dd] = date.split("-");
+        const dateLabel = `${mm}/${dd}`;
+
+        return { dateLabel, painBefore, painAfter };
+      });
+
+    // 4) 진행률: 오늘 로그가 1개라도 있으면 100, 아니면 0
+    const progress = todayLogs.length > 0 ? 100 : 0;
+
+    // 5) 상태 반영
+    setTodayRecoveryScore(score);
+    setStreakDays(streak);
+    setTodayProgress(progress);
+    setPainTrendData(trendItems);
+  }, [user?.userId, logsByDate]);
 
 
   /* ------------------------------------------------------------------ */
