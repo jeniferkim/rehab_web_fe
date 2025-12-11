@@ -2,7 +2,7 @@
 
 import AiRoutineSection from "../components/routine/AiRoutineSection";
 import MyRoutineSection from "../components/routine/MyRoutineSection";
-import { useRoutineStore } from "../stores/routineStore";
+// import { useRoutineStore } from "../stores/routineStore"; 
 // import { mockMyRoutines } from "../mocks/routineMocks";
 
 const RoutinesPage: React.FC = () => {
@@ -21,7 +21,8 @@ const RoutinesPage: React.FC = () => {
 
       {/* 내 루틴 섹션 (루틴 생성하기 버튼 + 내 루틴 리스트) */}
       {/* <MyRoutineSection routines={mockMyRoutines} /> */}
-      <MyRoutineSection routines={useRoutineStore().myRoutines} />
+      {/* <MyRoutineSection routines={useRoutineStore().myRoutines} /> */}
+      <MyRoutineSection />
     </div>
   );
 };
