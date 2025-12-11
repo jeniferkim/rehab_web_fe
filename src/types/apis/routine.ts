@@ -31,7 +31,7 @@ export type ExerciseSet = {
  * ------------------------------ */
 export type RoutineExercise = {
   id: number;                // planItemId 또는 exerciseId
-  exerciseId: number;        // 실제 운동 ID
+  exerciseId?: number;        // 실제 운동 ID
   name: string;
   bodyPart: string;          // "허리", "목", "무릎" 등
   difficulty?: string;       // BEGINNER 등
@@ -64,6 +64,7 @@ export type RoutineDetail = {
   phase?: string;            // PHASE_1 etc
   duration?: string;         // "30분"
   level?: string;
+  items?: RoutineItem[];
 };
 
 
@@ -91,4 +92,33 @@ export type RoutineDetailView = RoutineDetail & {
   // Swagger 기반 메타 필드
   rehabPlanId?: number; // = id 랑 사실상 같은 값일 수도 있음
   date?: string;        // "YYYY-MM-DD"
+};
+
+/** ------------------------------
+ *  (추가) 루틴 생성/편집에서 쓰는 아이템 타입
+ * ------------------------------ */
+
+// RoutineDetailForm 에서 사용하는 타입 그대로 맞춤
+export type RoutineType = "exercise" | "meal" | "medicine";
+
+/**
+ * 화면에서 입력 중인 상태(draft)
+ */
+export type RoutineItemDraft = {
+  mode: "range" | "point"; // 지금은 "range"만 쓰더라도 타입은 이렇게 열어두기
+  startTime: string;        // "09:00"
+  endTime: string;          // "11:00"
+  type: RoutineType;
+  memo: string;
+};
+
+/**
+ * 실제로 리스트에 추가된 아이템
+ */
+export type RoutineItem = {
+  id: string;               // uuid()
+  startTime: string;
+  endTime?: string;
+  type: RoutineType;
+  memo: string;
 };

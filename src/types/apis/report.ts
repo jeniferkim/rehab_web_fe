@@ -14,6 +14,11 @@ export type ProgressPainDaily = {
   avgPain: number;        // 0~10 기준 평균 통증
 };
 
+export type MedicationDailyData = {
+  date: string;
+  completionRate: number;
+};
+
 export type ProgressResult = {
   range: ProgressRange;   // "7d" | "14d" | "30d"
   startDate: string;      // "2025-11-25"
@@ -25,6 +30,7 @@ export type ProgressResult = {
   };
   medicationStats: {
     avgCompletionRate: number;
+    dailyData?: MedicationDailyData[];
   };
   painStats: {
     avgPainScore: number;

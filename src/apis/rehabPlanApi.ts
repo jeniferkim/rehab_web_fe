@@ -1,6 +1,6 @@
 // src/apis/rehabPlanApi.ts
-// import { apiClient } from "./client";
-// import type { ApiResponse } from "../types/apis/common";
+import { apiClient } from "./client";
+import type { ApiResponse } from "../types/apis/common";
 import type {
   RehabPlanSummary,
   RehabPlanItemsByDate,
@@ -36,11 +36,11 @@ export const rehabPlanApi = {
     }
 
     // 🔹 실제 서버 연결 시 (엔드포인트는 스웨거 보고 맞춰서 수정)
-    // const { data } = await apiClient.get<ApiResponse<RehabPlanSummary>>(
-    //   "/api/v1/rehab/plans/current",
-    //   { params: { userId } },
-    // );
-    // return data.result ?? null;
+    const { data } = await apiClient.get<ApiResponse<RehabPlanSummary>>(
+      "/api/v1/rehab/plans/current",
+      { params: { userId } },
+    );
+    return data.result ?? null;
   },
 
   /**
@@ -65,11 +65,11 @@ export const rehabPlanApi = {
     }
 
     // 🔹 실제 서버 연결 시 (엔드포인트는 스웨거 보고 맞춰서 수정)
-    // const { data } = await apiClient.get<
-    //   ApiResponse<RehabPlanItemsByDate>
-    // >(`/api/v1/rehab/plans/${rehabPlanId}/items`, {
-    //   params: { date },
-    // });
-    // return data.result;
+    const { data } = await apiClient.get<
+      ApiResponse<RehabPlanItemsByDate>
+    >(`/api/v1/rehab/plans/${rehabPlanId}/items`, {
+      params: { date },
+    });
+    return data.result;
   },
 };

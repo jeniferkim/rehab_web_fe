@@ -3,10 +3,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PainTrendChart, type PainTrendItem } from "../components/home/PainTrendChart";
 import { useAuthStore } from "../stores/authStore";
-import type { RehabPlanSummary } from "../types/apis/rehab";
+// import type { RehabPlanSummary } from "../types/apis/rehab";
 import { rehabPlanApi } from "../apis/rehabPlanApi";
-import { exerciseLogApi } from "../apis/exerciseLogApi";
-import type { ExerciseLog } from "../types/apis/exerciseLog";
+// import { exerciseLogApi } from "../apis/exerciseLogApi";
+// import type { ExerciseLog } from "../types/apis/exerciseLog";
 import { calculateDailyRecoveryScore, calculateStreak } from "../utils/recovery";
 import { useExerciseLogStore } from "../stores/exerciseLogStore";
 import { useRehabPlanStore } from "../stores/rehabPlanStore";
@@ -31,11 +31,11 @@ const HomePage: React.FC = () => {
   const [streakDays, setStreakDays] = useState(0);
   const [todayProgress, setTodayProgress] = useState(0); // 나중에 별도 산식으로 교체
 
-  const [isLoadingScore, setIsLoadingScore] = useState(false);
+  const [isLoadingScore] = useState(false); // 오류 잡음
 
 
   // 현재 활성 플랜
-  const { currentPlan } = useRehabPlanStore(); // 얘는 시연용
+  const { currentPlan, setCurrentPlan } = useRehabPlanStore(); // 얘는 시연용
   // const [currentPlan, setCurrentPlan] = useState<RehabPlanSummary | null>(null);
   const [isLoadingPlan, setIsLoadingPlan] = useState(false);
 
@@ -43,7 +43,7 @@ const HomePage: React.FC = () => {
 
 
   // 오늘 날짜 레이블
-  const today = new Date();
+  // const today = new Date();
   const todayLabel = new Date().toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
     const fetchCurrentPlan = async () => {
       setIsLoadingPlan(true);
       try {
-        const plan = await rehabPlanApi.getCurrentPlanForUser(user.userId);
+        const plan = await rehabPlanApi.getCurrentPlanForUser(Number(user.userId));
         if (!cancelled) {
           setCurrentPlan(plan);
         }

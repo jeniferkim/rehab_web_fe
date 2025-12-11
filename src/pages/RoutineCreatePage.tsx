@@ -18,8 +18,9 @@ const RoutineCreatePage: React.FC = () => {
 
   const [name, setName] = useState<string>("");
   const [items, setItems] = useState<RoutineItem[]>([]);
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("10:00");
+  // 타임레인지: 지금은 데모용으로만 값 사용 (수정은 나중에)
+  const [startTime] = useState("09:00");
+  const [endTime] = useState("10:00");
   // 일단 데모용으로 20분 고정
   const estimatedMinutes = 20;
   const [draft, setDraft] = useState<RoutineItemDraft>({

@@ -17,13 +17,47 @@ import type {
 import { updateDayStatus } from "../mocks/calendarStatusMock";
 import { RoutineCompleteModal } from "../components/routine/RoutineCompleteModal";
 import { PainScoreModal } from "../components/routine/PainScoreModal";
-import { rehabPlanApi } from "../apis/rehabPlanApi";
+// import { rehabPlanApi } from "../apis/rehabPlanApi";
 // import { exerciseApi } from "../apis/exerciseApi";
-import { exerciseLogApi } from "../apis/exerciseLogApi";
+// import { exerciseLogApi } from "../apis/exerciseLogApi";
 import { useAuthStore } from "../stores/authStore";
 import { mockRoutineDetailById } from "../mocks/routineMocks";
 import { useExerciseLogStore } from "../stores/exerciseLogStore";
 import type { ExerciseLog } from "../types/apis/exerciseLog";
+
+type DoseLike = {
+  reps?: number;
+  holdSeconds?: number;
+  restSeconds?: number;
+};
+
+type PlanItemLike = {
+  planItemId: number;
+  doses?: DoseLike[] | null;
+};
+
+type ExerciseMediaLike = {
+  type?: string;
+  url?: string;
+};
+
+type ExerciseImageLike = {
+  imageUrl?: string;
+};
+
+type ExerciseDetailLike = {
+  exerciseId: number;
+  title: string;
+  bodyPart?: string;
+  difficulty?: string;
+  images?: ExerciseImageLike[];
+  media?: ExerciseMediaLike[];
+  contraindications?: {
+    summary?: string;
+  };
+};
+
+
 
 // YYYY-MM-DD
 const formatDateKey = (date: Date) => {
@@ -33,11 +67,11 @@ const formatDateKey = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
-// PlanItem.doses → ExerciseSet[] (백엔드 스키마 확정 전이니 any 기반으로 느슨하게 처리)
-const mapDosesToExerciseSets = (doses: any): ExerciseSet[] => {
+// PlanItem.doses → ExerciseSet[] 
+const mapDosesToExerciseSets = (doses: DoseLike[] | null | undefined): ExerciseSet[] => {
   if (!doses || !Array.isArray(doses)) return [];
 
-  return doses.map((dose: any, idx: number) => ({
+  return doses.map((dose, idx) => ({
     setOrder: idx + 1,
     reps: typeof dose.reps === "number" ? dose.reps : undefined,
     holdSeconds:
@@ -49,14 +83,14 @@ const mapDosesToExerciseSets = (doses: any): ExerciseSet[] => {
 
 // ExerciseDetail + PlanItem → RoutineExercise
 const buildRoutineExercise = (params: {
-  planItem: any;
-  detail: any;
+  planItem: PlanItemLike;
+  detail: ExerciseDetailLike;
 }): RoutineExercise => {
   const { planItem, detail } = params;
 
   const firstImage = detail.images?.[0];
   const videoMedia = detail.media?.find(
-    (m: any) => m.type === "VIDEO" || m.type === "video",
+    (m) => m.type === "VIDEO" || m.type === "video",
   );
 
   const sets = mapDosesToExerciseSets(planItem.doses);
@@ -282,6 +316,7 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
         completionStatus: "done",
         streakCount: next, // 오늘까지 연속 일수
         painScore: prev?.painScore, // 통증은 나중에 모달에서 갱신
+        recoveryScore: 80, // 오류 잡음
         hasExercise: prev?.hasExercise ?? true,
         hasMedication: prev?.hasMedication ?? false,
         hasReminder: prev?.hasReminder ?? false,
@@ -370,12 +405,19 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
 
     
     updateDayStatus(todayKey, (prev) => ({
-      completionStatus: prev?.completionStatus ?? "pending",
-      streakCount: prev?.streakCount ?? streak,
-      hasExercise: prev?.hasExercise ?? true,
-      hasMedication: prev?.hasMedication ?? false,
-      hasReminder: prev?.hasReminder ?? false,
-      painScore,
+      // completionStatus: prev?.completionStatus ?? "pending",
+      // streakCount: prev?.streakCount ?? streak,
+      // hasExercise: prev?.hasExercise ?? true,
+      // hasMedication: prev?.hasMedication ?? false,
+      // hasReminder: prev?.hasReminder ?? false,
+      // painScore,
+        completionStatus: "done",
+        streakCount: 5, // 오늘까지 연속 일수
+        painScore: prev?.painScore, // 통증은 나중에 모달에서 갱신
+        recoveryScore: 80, // 시연용 고정 값
+        hasExercise: prev?.hasExercise ?? true,
+        hasMedication: prev?.hasMedication ?? false,
+        hasReminder: prev?.hasReminder ?? false,
     }));
 
     showToast(`통증 점수 ${painScore}점으로 기록했어요.`);

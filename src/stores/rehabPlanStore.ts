@@ -1,6 +1,7 @@
 // src/stores/rehabPlanStore.ts
 import { create } from "zustand";
 import type { RehabPlanSummary } from "../types/apis/rehab";
+import { mockCurrentPlan } from "../mocks/rehabPlanMocks";
 
 type RehabPlanState = {
   currentPlan: RehabPlanSummary | null;
@@ -8,6 +9,6 @@ type RehabPlanState = {
 };
 
 export const useRehabPlanStore = create<RehabPlanState>((set) => ({
-  currentPlan: null,
+  currentPlan: mockCurrentPlan,
   setCurrentPlan: (plan) => set({ currentPlan: plan }),
 }));
