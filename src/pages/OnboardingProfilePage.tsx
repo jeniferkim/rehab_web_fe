@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import type { Gender } from "../types/apis/user";
-import { userApi } from "../apis/userApi";
+// import { userApi } from "../apis/userApi";
 
 const OnboardingProfilePage: React.FC = () => {
   

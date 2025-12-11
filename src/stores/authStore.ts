@@ -25,14 +25,16 @@ type AuthState = {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    // (set, get) => ({
+    (set) => ({
       user: null,
       isAuthenticated: false,
 
       onboardingStep: 1,
       intakeResult: null,
 
-      login: async ({ email, password }) => {
+      // login: async ({ email, password }) => {
+      login: async ({ email }) => {
         await new Promise((r) => setTimeout(r, 500));
 
         const dummyUser: AppUser = {
@@ -55,7 +57,8 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      signup: async ({ email, password }) => {
+      // signup: async ({ email, password }) => { 
+      signup: async () => {
         // TODO: 여기서 실제 POST /auth/signup 호출하면 됨
         //      body: { email, password, passwordCheck: password }
         await new Promise((r) => setTimeout(r, 500));

@@ -56,7 +56,7 @@ const CalendarPage: React.FC = () => {
       try {
         const dateStr = formatDateLabel(selectedDate);
         const res = await exerciseLogApi.getLogsByDate({
-          userId: user.userId,
+          userId: Number(user.userId),
           date: dateStr,
         });
 

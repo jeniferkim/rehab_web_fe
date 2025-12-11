@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
-import { intakeApi } from "../apis/intakeApi";
+// import { intakeApi } from "../apis/intakeApi";
 import type { IntakeResult } from "../types/apis/intake";
 
 const MSK_REGIONS = [
@@ -35,7 +35,8 @@ function triageRisk(painScore: number): RiskLevel {
 
 const OnboardingAssessmentPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, setUser, completeOnboarding } = useAuthStore();
+  // const { user, setUser, completeOnboarding } = useAuthStore();
+  const { user, completeOnboarding } = useAuthStore(); // 에러 잡음
 
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [painScore, setPainScore] = useState<number | null>(null);

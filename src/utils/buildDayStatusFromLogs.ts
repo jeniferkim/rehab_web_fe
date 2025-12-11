@@ -24,6 +24,7 @@ export const buildDayStatusFromLogs = (
       completionStatus: "rest",
       streakCount: 0,
       painScore: undefined,
+      recoveryScore: 65,
       hasExercise: false,
       hasMedication: false,
       hasReminder: false,

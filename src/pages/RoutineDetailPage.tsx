@@ -222,12 +222,56 @@ const RoutineDetailPage = () => {
     if (!detail) {
       setLoadError("해당 루틴을 찾을 수 없습니다.");
       setRoutine(null);
-    } else {
-      setRoutine(detail);
+      setIsLoading(false);
+      return;
     }
 
+    // ✅ 2) mock으로 받은 RoutineExercise -> PlanItemLike / ExerciseDetailLike로 변환해서
+    //      buildRoutineExercise를 실제로 사용해서 다시 한 번 normalize
+    const normalizedExercises: RoutineExercise[] = detail.exercises.map((ex) => {
+      const doses: DoseLike[] | null =
+        ex.sets && ex.sets.length > 0
+          ? ex.sets.map((set) => ({
+              reps: set.reps,
+              holdSeconds: set.holdSeconds,
+              restSeconds: set.restSeconds,
+            }))
+          : null;
+
+      const planItem: PlanItemLike = {
+        planItemId: typeof ex.id === "number" ? ex.id : Number(ex.id),
+        doses,
+      };
+
+      const exerciseDetail: ExerciseDetailLike = {
+        exerciseId: Number(ex.exerciseId),
+        title: ex.name,
+        bodyPart: ex.bodyPart,
+        difficulty: ex.difficulty,
+        images: ex.thumbnailUrl ? [{ imageUrl: ex.thumbnailUrl }] : [],
+        media: ex.videoUrl
+          ? [
+              {
+                type: "VIDEO",
+                url: ex.videoUrl,
+              },
+            ]
+          : [],
+        contraindications: ex.caution ? { summary: ex.caution } : undefined,
+      };
+
+      return buildRoutineExercise({ planItem, detail: exerciseDetail });
+    });
+
+    const normalizedDetail: RoutineDetailView = {
+      ...detail,
+      exercises: normalizedExercises,
+    };
+
+    setRoutine(normalizedDetail);
     setIsLoading(false);
   }, [routineId]);
+
 
   if (isLoading && !routine) {
     return (
