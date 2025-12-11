@@ -18,7 +18,7 @@ import type {
 // ✅ 내 루틴 리스트 (RoutinesPage에서 쓰는 목록용)
 export const mockMyRoutines: RoutineSummary[] = [
   {
-    id: "1",
+    id: 1,
     title: "Routine 01",
     duration: "2H",
     level: "기본",
@@ -26,7 +26,7 @@ export const mockMyRoutines: RoutineSummary[] = [
     timeRangeLabel: "09:00 ~ 12:00",
   },
   {
-    id: "2",
+    id: 2,
     title: "아침 스트레칭 루틴",
     duration: "30분",
     level: "초급",
@@ -38,19 +38,22 @@ export const mockMyRoutines: RoutineSummary[] = [
 // ✅ AI 추천 루틴 카드에서 쓸 요약 리스트 (AiRoutineSection용)
 export const mockAiRoutineSummaries: RoutineSummary[] = [
   {
-    id: "neck-1",
+    // id: "neck-1",
+    id: 101,
     title: "거북목 교정 루틴",
     duration: "15분",
     level: "초급",
   },
   {
-    id: "back-1",
+    // id: "back-1",
+    id: 102,
     title: "허리 통증 완화 루틴",
     duration: "20분",
     level: "중급",
   },
   {
-    id: "knee-1",
+    // id: "knee-1",
+    id: 103,
     title: "무릎 안정화 루틴",
     duration: "25분",
     level: "초급",
@@ -121,7 +124,8 @@ const setsShoulderRoll: ExerciseSet[] = [
 ];
 
 const neckStretch: RoutineExercise = {
-  id: "ex-neck-1",
+  // id: "ex-neck-1",
+  id: 201,
   name: "목 측면 스트레칭",
   bodyPart: "목",
   thumbnailUrl:
@@ -133,7 +137,8 @@ const neckStretch: RoutineExercise = {
 };
 
 const shoulderRoll: RoutineExercise = {
-  id: "ex-shoulder-1",
+  // id: "ex-shoulder-1",
+  id: 202,
   name: "어깨 돌리기",
   bodyPart: "어깨",
   thumbnailUrl:
@@ -171,7 +176,7 @@ export const mockRoutineDetailById: Record<string, RoutineDetailView> = {
     title: "거북목 교정 루틴",
     duration: "15분",
     level: "초급",
-    items: [], // 기존 스케줄용이 필요 없으면 비워둬도 됨
+    // items: [], // 기존 스케줄용이 필요 없으면 비워둬도 됨
     exercises: [neckStretch, shoulderRoll],
     clinicalEvidence: evidenceList,
   },
@@ -183,7 +188,7 @@ export const mockTodayMainRoutineId = "1";
 // id -> 루틴 요약 맵 (홈에서 사용)
 export const mockRoutineSummaryById: Record<string, RoutineSummary> = {
   "1": {
-    id: "1",
+    id: 1,
     title: "거북목 교정 루틴",
     duration: "15분",
     level: "초급",

@@ -4,11 +4,16 @@ import type { RoutineSummary } from "../../types/apis/routine";
 
 type Props = {
   routine: RoutineSummary;
+  onClick?: () => void;
 };
 
-const RoutineCard: React.FC<Props> = ({ routine }) => {
+const RoutineCard: React.FC<Props> = ({ routine, onClick }) => {
   return (
-    <div className="flex items-center justify-between rounded-3xl bg-white p-4 shadow-sm">
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-between rounded-3xl bg-white p-4 shadow-sm"
+    >
       <div>
         <p className="text-sm font-semibold text-gray-900">
           {routine.title}
@@ -21,7 +26,7 @@ const RoutineCard: React.FC<Props> = ({ routine }) => {
         <button className="hover:text-gray-600">📅</button>
         <button className="hover:text-red-500">🗑</button>
       </div>
-    </div>
+    </button>
   );
 };
 

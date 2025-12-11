@@ -37,7 +37,6 @@ function App() {
               
               <Route path="routines" element={<RoutinesPage />} />
               <Route path="routines/new" element={<RoutineCreatePage />} />
-              {/* <Route path="routines/:id" element={<RoutineEditPage />} /> 이거 꼬일 것 같긴 한데 나중에 여기서 문제되면 바꾸기*/}
               {/* App 라우팅 설정 일부 */}
               <Route path="/app/routines/:routineId" element={<RoutineDetailPage />} />
               <Route path="/app/routines/:id/edit" element={<RoutineEditPage />} />

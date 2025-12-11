@@ -21,6 +21,7 @@ import { rehabPlanApi } from "../apis/rehabPlanApi";
 import { exerciseApi } from "../apis/exerciseApi";
 import { exerciseLogApi } from "../apis/exerciseLogApi";
 import { useAuthStore } from "../stores/authStore";
+import { mockRoutineDetailById } from "../mocks/routineMocks";
 
 // YYYY-MM-DD
 const formatDateKey = (date: Date) => {
@@ -85,82 +86,111 @@ const RoutineDetailPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // useEffect(() => {
+  //   if (!routineId) {
+  //     setLoadError("잘못된 루틴 ID입니다.");
+  //     return;
+  //   }
+
+  //   const rehabPlanId = Number(routineId);
+  //   if (Number.isNaN(rehabPlanId)) {
+  //     setLoadError("잘못된 루틴 ID 형식입니다.");
+  //     return;
+  //   }
+
+  //   let cancelled = false;
+
+  //   const loadRoutine = async () => {
+  //     setIsLoading(true);
+  //     setLoadError(null);
+
+  //     try {
+  //       const today = formatDateKey(new Date());
+
+  //       // 1) 오늘 날짜 기준 플랜 항목 조회
+  //       const planItemsByDate =
+  //         await rehabPlanApi.getPlanItemsByDate(rehabPlanId, today);
+  //       const items = planItemsByDate.items ?? [];
+
+  //       if (items.length === 0) {
+  //         if (!cancelled) {
+  //           setLoadError("오늘 진행할 운동이 없습니다.");
+  //         }
+  //         return;
+  //       }
+
+  //       // 2) 각 항목의 운동 상세 조회
+  //       const details = await Promise.all(
+  //         items.map((item: any) =>
+  //           exerciseApi.getExerciseDetail(item.exerciseId),
+  //         ),
+  //       );
+
+  //       // 3) RoutineExercise 리스트로 변환
+  //       const exercises: RoutineExercise[] = items.map(
+  //         (item: any, idx: number) =>
+  //           buildRoutineExercise({ planItem: item, detail: details[idx] }),
+  //       );
+
+  //       // 4) 최종 ViewModel 구성
+  //       const detailView: RoutineDetailView = {
+  //         id: rehabPlanId,
+  //         title: "오늘의 재활 루틴",
+  //         level: "초급", // TODO: 백엔드 플랜 레벨 나오면 매핑
+  //         duration: `${exercises.length * 5}분`, // 대략: 운동 개수 * 5분
+  //         exercises,
+  //         clinicalEvidence: [], // TODO: 나중에 실제 근거 데이터 연동
+  //       };
+
+  //       if (!cancelled) {
+  //         setRoutine(detailView);
+  //       }
+  //     } catch (e) {
+  //       console.error(e);
+  //       if (!cancelled) {
+  //         setLoadError("루틴 정보를 불러오는 중 문제가 발생했습니다.");
+  //       }
+  //     } finally {
+  //       if (!cancelled) {
+  //         setIsLoading(false);
+  //       }
+  //     }
+  //   };
+
+  //   loadRoutine();
+
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [routineId]);
+  
   useEffect(() => {
+    // 요건 시연용. 시연 끝나구 위에 다시 돌려놓기. 위에는 api 붙인 코드임
     if (!routineId) {
       setLoadError("잘못된 루틴 ID입니다.");
       return;
     }
 
-    const rehabPlanId = Number(routineId);
-    if (Number.isNaN(rehabPlanId)) {
+    const numericId = Number(routineId);
+    if (Number.isNaN(numericId)) {
       setLoadError("잘못된 루틴 ID 형식입니다.");
       return;
     }
 
-    let cancelled = false;
+    setIsLoading(true);
+    setLoadError(null);
 
-    const loadRoutine = async () => {
-      setIsLoading(true);
-      setLoadError(null);
+    // ✅ 1) mock에서 바로 조회
+    const detail = mockRoutineDetailById[String(numericId)];
 
-      try {
-        const today = formatDateKey(new Date());
+    if (!detail) {
+      setLoadError("해당 루틴을 찾을 수 없습니다.");
+      setRoutine(null);
+    } else {
+      setRoutine(detail);
+    }
 
-        // 1) 오늘 날짜 기준 플랜 항목 조회
-        const planItemsByDate =
-          await rehabPlanApi.getPlanItemsByDate(rehabPlanId, today);
-        const items = planItemsByDate.items ?? [];
-
-        if (items.length === 0) {
-          if (!cancelled) {
-            setLoadError("오늘 진행할 운동이 없습니다.");
-          }
-          return;
-        }
-
-        // 2) 각 항목의 운동 상세 조회
-        const details = await Promise.all(
-          items.map((item: any) =>
-            exerciseApi.getExerciseDetail(item.exerciseId),
-          ),
-        );
-
-        // 3) RoutineExercise 리스트로 변환
-        const exercises: RoutineExercise[] = items.map(
-          (item: any, idx: number) =>
-            buildRoutineExercise({ planItem: item, detail: details[idx] }),
-        );
-
-        // 4) 최종 ViewModel 구성
-        const detailView: RoutineDetailView = {
-          id: rehabPlanId,
-          title: "오늘의 재활 루틴",
-          level: "초급", // TODO: 백엔드 플랜 레벨 나오면 매핑
-          duration: `${exercises.length * 5}분`, // 대략: 운동 개수 * 5분
-          exercises,
-          clinicalEvidence: [], // TODO: 나중에 실제 근거 데이터 연동
-        };
-
-        if (!cancelled) {
-          setRoutine(detailView);
-        }
-      } catch (e) {
-        console.error(e);
-        if (!cancelled) {
-          setLoadError("루틴 정보를 불러오는 중 문제가 발생했습니다.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadRoutine();
-
-    return () => {
-      cancelled = true;
-    };
+    setIsLoading(false);
   }, [routineId]);
 
   if (isLoading && !routine) {

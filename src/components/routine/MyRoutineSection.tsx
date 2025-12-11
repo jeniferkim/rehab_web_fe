@@ -13,6 +13,10 @@ type Props = {
 const MyRoutineSection: React.FC<Props> = ({ routines }) => {
   const navigate = useNavigate();
 
+  const handleClickRoutine = (id: number) => {
+    navigate(`/app/routines/${id}`);
+  };
+
   return (
     <section className="space-y-4">
       <h2 className="text-base font-semibold text-gray-900">내 루틴</h2>
@@ -24,7 +28,7 @@ const MyRoutineSection: React.FC<Props> = ({ routines }) => {
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-blue-50/40 px-4 py-4 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
         >
           <span className="text-lg">＋</span>
-          <span>루틴 생성하기</span>
+          <span>새 루틴 생성하기</span>
         </button>
       </div>
 
@@ -35,7 +39,11 @@ const MyRoutineSection: React.FC<Props> = ({ routines }) => {
       ) : (
         <div className="space-y-3">
           {routines.map((r) => (
-            <RoutineCard key={r.id} routine={r} />
+            <RoutineCard
+              key={r.id}
+              routine={r}
+              onClick={() => handleClickRoutine(r.id)}
+            />
           ))}
         </div>
       )}
