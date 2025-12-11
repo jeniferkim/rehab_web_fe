@@ -18,9 +18,12 @@ import { updateDayStatus } from "../mocks/calendarStatusMock";
 import { RoutineCompleteModal } from "../components/routine/RoutineCompleteModal";
 import { PainScoreModal } from "../components/routine/PainScoreModal";
 import { rehabPlanApi } from "../apis/rehabPlanApi";
-import { exerciseApi } from "../apis/exerciseApi";
+// import { exerciseApi } from "../apis/exerciseApi";
 import { exerciseLogApi } from "../apis/exerciseLogApi";
 import { useAuthStore } from "../stores/authStore";
+import { mockRoutineDetailById } from "../mocks/routineMocks";
+import { useExerciseLogStore } from "../stores/exerciseLogStore";
+import type { ExerciseLog } from "../types/apis/exerciseLog";
 
 // YYYY-MM-DD
 const formatDateKey = (date: Date) => {
@@ -85,82 +88,111 @@ const RoutineDetailPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // useEffect(() => {
+  //   if (!routineId) {
+  //     setLoadError("잘못된 루틴 ID입니다.");
+  //     return;
+  //   }
+
+  //   const rehabPlanId = Number(routineId);
+  //   if (Number.isNaN(rehabPlanId)) {
+  //     setLoadError("잘못된 루틴 ID 형식입니다.");
+  //     return;
+  //   }
+
+  //   let cancelled = false;
+
+  //   const loadRoutine = async () => {
+  //     setIsLoading(true);
+  //     setLoadError(null);
+
+  //     try {
+  //       const today = formatDateKey(new Date());
+
+  //       // 1) 오늘 날짜 기준 플랜 항목 조회
+  //       const planItemsByDate =
+  //         await rehabPlanApi.getPlanItemsByDate(rehabPlanId, today);
+  //       const items = planItemsByDate.items ?? [];
+
+  //       if (items.length === 0) {
+  //         if (!cancelled) {
+  //           setLoadError("오늘 진행할 운동이 없습니다.");
+  //         }
+  //         return;
+  //       }
+
+  //       // 2) 각 항목의 운동 상세 조회
+  //       const details = await Promise.all(
+  //         items.map((item: any) =>
+  //           exerciseApi.getExerciseDetail(item.exerciseId),
+  //         ),
+  //       );
+
+  //       // 3) RoutineExercise 리스트로 변환
+  //       const exercises: RoutineExercise[] = items.map(
+  //         (item: any, idx: number) =>
+  //           buildRoutineExercise({ planItem: item, detail: details[idx] }),
+  //       );
+
+  //       // 4) 최종 ViewModel 구성
+  //       const detailView: RoutineDetailView = {
+  //         id: rehabPlanId,
+  //         title: "오늘의 재활 루틴",
+  //         level: "초급", // TODO: 백엔드 플랜 레벨 나오면 매핑
+  //         duration: `${exercises.length * 5}분`, // 대략: 운동 개수 * 5분
+  //         exercises,
+  //         clinicalEvidence: [], // TODO: 나중에 실제 근거 데이터 연동
+  //       };
+
+  //       if (!cancelled) {
+  //         setRoutine(detailView);
+  //       }
+  //     } catch (e) {
+  //       console.error(e);
+  //       if (!cancelled) {
+  //         setLoadError("루틴 정보를 불러오는 중 문제가 발생했습니다.");
+  //       }
+  //     } finally {
+  //       if (!cancelled) {
+  //         setIsLoading(false);
+  //       }
+  //     }
+  //   };
+
+  //   loadRoutine();
+
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [routineId]);
+  
   useEffect(() => {
+    // 요건 시연용. 시연 끝나구 위에 다시 돌려놓기. 위에는 api 붙인 코드임
     if (!routineId) {
       setLoadError("잘못된 루틴 ID입니다.");
       return;
     }
 
-    const rehabPlanId = Number(routineId);
-    if (Number.isNaN(rehabPlanId)) {
+    const numericId = Number(routineId);
+    if (Number.isNaN(numericId)) {
       setLoadError("잘못된 루틴 ID 형식입니다.");
       return;
     }
 
-    let cancelled = false;
+    setIsLoading(true);
+    setLoadError(null);
 
-    const loadRoutine = async () => {
-      setIsLoading(true);
-      setLoadError(null);
+    // ✅ 1) mock에서 바로 조회
+    const detail = mockRoutineDetailById[String(numericId)];
 
-      try {
-        const today = formatDateKey(new Date());
+    if (!detail) {
+      setLoadError("해당 루틴을 찾을 수 없습니다.");
+      setRoutine(null);
+    } else {
+      setRoutine(detail);
+    }
 
-        // 1) 오늘 날짜 기준 플랜 항목 조회
-        const planItemsByDate =
-          await rehabPlanApi.getPlanItemsByDate(rehabPlanId, today);
-        const items = planItemsByDate.items ?? [];
-
-        if (items.length === 0) {
-          if (!cancelled) {
-            setLoadError("오늘 진행할 운동이 없습니다.");
-          }
-          return;
-        }
-
-        // 2) 각 항목의 운동 상세 조회
-        const details = await Promise.all(
-          items.map((item: any) =>
-            exerciseApi.getExerciseDetail(item.exerciseId),
-          ),
-        );
-
-        // 3) RoutineExercise 리스트로 변환
-        const exercises: RoutineExercise[] = items.map(
-          (item: any, idx: number) =>
-            buildRoutineExercise({ planItem: item, detail: details[idx] }),
-        );
-
-        // 4) 최종 ViewModel 구성
-        const detailView: RoutineDetailView = {
-          id: rehabPlanId,
-          title: "오늘의 재활 루틴",
-          level: "초급", // TODO: 백엔드 플랜 레벨 나오면 매핑
-          duration: `${exercises.length * 5}분`, // 대략: 운동 개수 * 5분
-          exercises,
-          clinicalEvidence: [], // TODO: 나중에 실제 근거 데이터 연동
-        };
-
-        if (!cancelled) {
-          setRoutine(detailView);
-        }
-      } catch (e) {
-        console.error(e);
-        if (!cancelled) {
-          setLoadError("루틴 정보를 불러오는 중 문제가 발생했습니다.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadRoutine();
-
-    return () => {
-      cancelled = true;
-    };
+    setIsLoading(false);
   }, [routineId]);
 
   if (isLoading && !routine) {
@@ -195,7 +227,10 @@ interface RoutineDetailPageContentProps {
 }
 
 const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) => {
+  // const { user } = useAuthStore();
+  const addLogForDate = useExerciseLogStore((s) => s.addLogForDate);
   const { user } = useAuthStore();
+
 
   /* 🔹 1) 기본 상태 */
   const totalExercises = routine.exercises.length;
@@ -261,35 +296,79 @@ const RoutineDetailPageContent = ({ routine }: RoutineDetailPageContentProps) =>
 
   /* 🔹 4) 통증 점수 저장 */
   const handleSubmitPainScore = async () => {
+    const now = new Date();
+    const todayStr = formatDateKey(now); 
     const loggedAt = new Date().toISOString();
 
-    // 1) 운동 로그 저장 (mock 기준)
-    if (user?.userId) {
-      try {
-        await Promise.all(
-          routine.exercises.map((ex) =>
-            exerciseLogApi.createExerciseLog({
-              userId: user.userId,
-              body: {
-                planItemId: ex.id,           // 우리는 planItemId를 RoutineExercise.id로 사용 중
-                loggedAt,
-                painAfter: painScore,
-                completionRate: 100,
-                // 필요하면 여기서 rpe, durationSec 등 추가
-              },
-            }),
-          ),
-        );
-        console.log("[Routine] exercise logs saved for routine", routine.id);
-      } catch (e) {
-        console.error("[Routine] save exercise logs failed", e);
-        // 일단 서비스 끊기지 않게 캘린더/네비게이션은 계속 진행
-      }
-    } else {
-      console.log("[Routine] user is null, skip exerciseLogApi");
-    }
+    console.log("[Routine] handleSubmitPainScore called");
+    console.log("  todayStr:", todayStr);
+    console.log("  painScore:", painScore);
+
+    // // 1) 운동 로그 저장 (mock 기준)
+    // if (user?.userId) {
+    //   try {
+    //     await Promise.all(
+    //       routine.exercises.map((ex) =>
+    //         exerciseLogApi.createExerciseLog({
+    //           userId: user.userId,
+    //           body: {
+    //             planItemId: ex.id,           // 우리는 planItemId를 RoutineExercise.id로 사용 중
+    //             loggedAt,
+    //             painAfter: painScore,
+    //             completionRate: 100,
+    //             // 필요하면 여기서 rpe, durationSec 등 추가
+    //           },
+    //         }),
+    //       ),
+    //     );
+    //     console.log("[Routine] exercise logs saved for routine", routine.id);
+    //   } catch (e) {
+    //     console.error("[Routine] save exercise logs failed", e);
+    //     // 일단 서비스 끊기지 않게 캘린더/네비게이션은 계속 진행
+    //   }
+    // } else {
+    //   console.log("[Routine] user is null, skip exerciseLogApi");
+    // }
 
     // ✅ 해당 날짜의 painScore만 업데이트
+    
+    // 1) 오늘 날짜에 운동 로그 1개 추가 (store 기반)
+  //    - 시연용이라 "루틴 단위로 1개"만 저장해도 충분함
+  //    - 타입 에러 나면 ExerciseLog 정의에 맞게 필드만 살짝 맞춰주면 돼
+    
+    if (!user?.userId) {
+      console.log("[Routine] user is null, skip adding logs");
+    } else {
+      // 1) 오늘 루틴에 포함된 운동들 기준으로 ExerciseLog 배열 생성
+      const logsForToday: ExerciseLog[] = routine.exercises.map(
+        (ex, index): ExerciseLog => ({
+          exerciseLogId: Date.now() + index, // 시연용 임시 ID
+          userId: Number(user.userId),
+          planItemId: ex.id,                 // 우리는 RoutineExercise.id를 planItemId로 사용
+          loggedAt,                          // ISO 문자열
+          painBefore: painScore,             // 시연용: before/after 동일 값으로
+          painAfter: painScore,
+          rpe: 5,                            // 시연용 고정 값
+          completionRate: 100,               // 100% 완료
+          durationSec: (ex.sets?.length ?? 1) * 60, // 세트 수 * 60초 정도로 대충
+          notes: "",
+          status: "COMPLETED",               // ExerciseLogStatus = 'COMPLETED' | string
+          createdAt: loggedAt,
+          updatedAt: loggedAt,
+        }),
+      );
+
+      console.log("[Routine] logsForToday:", logsForToday);
+      
+      // 2) Zustand store에 날짜별로 로그 저장
+      logsForToday.forEach((log) => {
+        addLogForDate(todayStr, log);
+      });
+
+      console.log("[Routine] logs added to store:", todayStr, logsForToday);
+    }
+
+    
     updateDayStatus(todayKey, (prev) => ({
       completionStatus: prev?.completionStatus ?? "pending",
       streakCount: prev?.streakCount ?? streak,

@@ -8,10 +8,20 @@ import type {
   RoutineItem,
   RoutineItemDraft,
 } from "../types/apis/routine";
+import { useRoutineStore } from "../stores/routineStore";
+import { useNavigate } from "react-router-dom";
 
 const RoutineCreatePage: React.FC = () => {
+
+  const addRoutine = useRoutineStore((s) => s.addRoutine);
+  const navigate = useNavigate();
+
   const [name, setName] = useState<string>("");
   const [items, setItems] = useState<RoutineItem[]>([]);
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("10:00");
+  // 일단 데모용으로 20분 고정
+  const estimatedMinutes = 20;
   const [draft, setDraft] = useState<RoutineItemDraft>({
     mode: "range",
     startTime: "09:00",
@@ -42,7 +52,26 @@ const RoutineCreatePage: React.FC = () => {
   const handleSave = () => {
     const payload = { name, items };
     console.log("루틴 저장 payload:", payload);
+
+    if (!name.trim()) {
+      alert("루틴 이름을 입력해 주세요.");
+      return;
+    }
+    
+    // TODO: 나중에 items.length 로 교체
+    const itemCount = items.length ?? 2;
+    
     // TODO: API 연동 후 /app/routines 로 이동 등
+    // 기본값만 일단 저장
+    const newId = addRoutine({
+      title: name.trim(),
+      duration: `${estimatedMinutes}분`,
+      level: "초급",
+      itemCount,
+      timeRangeLabel: `${startTime} ~ ${endTime}`,
+    });
+
+    navigate(`/app/routines/${newId}`);
   };
 
   return (

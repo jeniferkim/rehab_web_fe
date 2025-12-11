@@ -1,14 +1,25 @@
 // src/components/routine/RoutineCard.tsx
 import React from "react";
 import type { RoutineSummary } from "../../types/apis/routine";
+import { FiCalendar, FiTrash2 } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+
 
 type Props = {
   routine: RoutineSummary;
+  onClick?: () => void;
+  onDelete?: () => void;
 };
 
-const RoutineCard: React.FC<Props> = ({ routine }) => {
+const RoutineCard: React.FC<Props> = ({ routine, onClick, onDelete }) => {
+  const navigate = useNavigate();
+
   return (
-    <div className="flex items-center justify-between rounded-3xl bg-white p-4 shadow-sm">
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-between rounded-3xl bg-white p-4 shadow-sm"
+    >
       <div>
         <p className="text-sm font-semibold text-gray-900">
           {routine.title}
@@ -17,11 +28,26 @@ const RoutineCard: React.FC<Props> = ({ routine }) => {
           {(routine.itemCount ?? 0)}개 · {routine.timeRangeLabel ?? "-"}
         </p>
       </div>
+
       <div className="flex items-center gap-3 text-gray-400">
-        <button className="hover:text-gray-600">📅</button>
-        <button className="hover:text-red-500">🗑</button>
+        <FiCalendar 
+          onClick={(e) => {
+            e.stopPropagation(); // 카드 클릭 방지
+            navigate('/app/calendar');
+          }}
+          className="text-lg  hover:text-blue-600 cursor-pointer" 
+        />
+
+        {/* 삭제 버튼 */}
+        <FiTrash2
+          className="text-lg hover:text-red-500 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation(); // 카드 클릭 방지
+            onDelete?.();
+          }}
+        />
       </div>
-    </div>
+    </button>
   );
 };
 
