@@ -10,13 +10,14 @@ import {
   HiOutlineChevronDoubleLeft,
   HiOutlineChevronDoubleRight,
 } from "react-icons/hi2";
+import { TbReportAnalytics } from "react-icons/tb";
 
 const navItems = [
   { label: "홈", to: "/app/home", icon: HiOutlineHome },
   { label: "루틴", to: "/app/routines", icon: HiOutlineClipboardDocumentList },
   { label: "캘린더", to: "/app/calendar", icon: HiOutlineCalendarDays },
   { label: "AI 채팅", to: "/app/chat", icon: HiOutlineChatBubbleLeftRight },
-  { label: "리포트", to: "/app/report", icon: HiOutlineChatBubbleLeftRight },
+  { label: "리포트", to: "/app/report", icon: TbReportAnalytics },
   { label: "설정", to: "/app/settings", icon: HiOutlineCog6Tooth },
 ];
 
