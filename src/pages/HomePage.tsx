@@ -1,5 +1,5 @@
 // src/pages/HomePage.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PainTrendChart, type PainTrendItem } from "../components/home/PainTrendChart";
 import { useAuthStore } from "../stores/authStore";
@@ -7,9 +7,10 @@ import { useAuthStore } from "../stores/authStore";
 import { rehabPlanApi } from "../apis/rehabPlanApi";
 // import { exerciseLogApi } from "../apis/exerciseLogApi";
 // import type { ExerciseLog } from "../types/apis/exerciseLog";
-import { calculateDailyRecoveryScore, calculateStreak } from "../utils/recovery";
+import { calculateStreak } from "../utils/recovery";
 import { useExerciseLogStore } from "../stores/exerciseLogStore";
 import { useRehabPlanStore } from "../stores/rehabPlanStore";
+import { useReminderStore } from "../stores/reminderStore";
 
 const formatDate = (date: Date) => {
   const y = date.getFullYear();
@@ -27,11 +28,11 @@ const HomePage: React.FC = () => {
 
 
   // 회복 점수 / 스트릭 / 진행률
-  const [todayRecoveryScore, setTodayRecoveryScore] = useState(0);
+  // const [todayRecoveryScore, setTodayRecoveryScore] = useState(0); 삭제
   const [streakDays, setStreakDays] = useState(0);
   const [todayProgress, setTodayProgress] = useState(0); // 나중에 별도 산식으로 교체
 
-  const [isLoadingScore] = useState(false); // 오류 잡음
+  // const [isLoadingScore] = useState(false); // 오류 잡음
 
 
   // 현재 활성 플랜
@@ -52,6 +53,37 @@ const HomePage: React.FC = () => {
   });
 
   const displayName = user?.username || user?.email || "사용자";
+
+  // 리마인더 추가
+  const {
+    reminders,
+    loading: reminderLoading,
+    fetchReminders,
+  } = useReminderStore();
+
+  useEffect(() => {
+    fetchReminders();
+  }, [fetchReminders]);
+
+  // EXERCISE + PUSH 리마인더 한 개 가져오기
+  const exerciseReminder = useMemo(
+    () =>
+      reminders.find(
+        (r) => r.type === "EXERCISE" && r.channel === "PUSH"
+      ) ?? null,
+    [reminders]
+  );
+
+  // 시간 표시용 헬퍼
+  const formatReminderTime = (iso?: string) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleTimeString("ko-KR", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
 
   /* ------------------------------------------------------------------ */
   /*  1. 현재 활성 플랜 조회                                             */
@@ -166,14 +198,14 @@ const HomePage: React.FC = () => {
   //       const progress = todayLogs.length > 0 ? 100 : 0;
 
   //       if (!cancelled) {
-  //         setTodayRecoveryScore(score);
+          // setTodayRecoveryScore(score); 삭제
   //         setStreakDays(streak);
   //         setTodayProgress(progress);
   //       }
   //       } catch (e) {
   //         console.error(e);
   //         if (!cancelled) {
-  //           setTodayRecoveryScore(0);
+  //           setTodayRecoveryScore(0); 삭제
   //           setStreakDays(0);
   //           setTodayProgress(0);
   //         }
@@ -213,7 +245,7 @@ const HomePage: React.FC = () => {
     const todayLogs = logsByDate[todayStr] ?? [];
 
     // 2) 회복 점수 / 스트릭 계산
-    const score = calculateDailyRecoveryScore(todayLogs);
+    // const score = calculateDailyRecoveryScore(todayLogs); 삭제
     const streak = calculateStreak({ logsByDate, today: todayStr });
 
     // 3) 통증 추이 데이터 생성
@@ -248,7 +280,7 @@ const HomePage: React.FC = () => {
     const progress = todayLogs.length > 0 ? 100 : 0;
 
     // 5) 상태 반영
-    setTodayRecoveryScore(score);
+    // setTodayRecoveryScore(score); 삭제
     setStreakDays(streak);
     setTodayProgress(progress);
     setPainTrendData(trendItems);
@@ -289,7 +321,7 @@ const HomePage: React.FC = () => {
 
       {/* 상단 카드: 오늘의 회복 점수 / 연속 달성 */}
       <section className="grid gap-4 md:grid-cols-2">
-        {/* 오늘의 회복 점수 */}
+        {/* 오늘의 회복 점수 삭제
         <div className="rounded-3xl bg-white p-5 shadow-sm">
           <p className="mb-2 text-sm font-semibold text-gray-500">
             오늘의 회복 점수
@@ -305,10 +337,76 @@ const HomePage: React.FC = () => {
               ? "오늘 운동 기록을 불러오는 중이에요."
               : "빠른 회복을 축하합니다."}
           </p>
+        </div> */}
+
+        {/* 오늘의 리마인더 카드 */}
+        <div className="rounded-2xl bg-blue-50 px-6 py-4 shadow-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-blue-900">
+                오늘의 리마인더
+              </span>
+              <span className="text-[11px] text-blue-700">
+                재활 루틴을 잊지 않도록 도와드려요.
+              </span>
+            </div>
+
+            {exerciseReminder?.enabled && (
+              <span className="rounded-full bg-blue-600/10 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                ON
+              </span>
+            )}
+          </div>
+
+          {reminderLoading ? (
+            <p className="text-xs text-blue-800">
+              리마인더 정보를 불러오는 중이에요…
+            </p>
+          ) : !exerciseReminder ? (
+            // 🔹 아직 리마인더가 없는 경우
+            <div className="mt-2 space-y-3">
+              <p className="text-sm text-blue-900">
+                아직 운동 리마인더가 설정되지 않았어요.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate("/app/settings")} // 실제 설정 경로에 맞게 수정
+                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white"
+              >
+                리마인더 설정하러 가기
+              </button>
+            </div>
+          ) : exerciseReminder.enabled ? (
+            // 🔹 리마인더 켜져 있는 경우
+            <div className="mt-2 space-y-1">
+              <p className="text-sm font-semibold text-blue-900">
+                오늘 {formatReminderTime(exerciseReminder.nextFireAt)}에
+                알림이 갈 예정이에요.
+              </p>
+              <p className="text-[11px] text-blue-800">
+                주당 목표에 맞춰 오늘 루틴을 한 번만 완료해볼까요?
+              </p>
+            </div>
+          ) : (
+            // 🔹 리마인더가 있지만 꺼져 있는 경우
+            <div className="mt-2 space-y-3">
+              <p className="text-sm text-blue-900">
+                운동 리마인더가 꺼져 있어요.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate("/app/settings")}
+                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white"
+              >
+                리마인더 다시 켜기
+              </button>
+            </div>
+          )}
         </div>
 
+
         {/* 연속 달성 */}
-        <div className="rounded-3xl bg-orange-50 p-5 shadow-sm">
+        <div className="rounded-3xl bg-blue-50 p-5 shadow-sm">
           <p className="mb-2 text-sm font-semibold text-gray-600">연속 달성</p>
           <div className="flex items-end gap-2">
             <span className="text-4xl font-extrabold text-gray-900">
