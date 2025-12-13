@@ -47,6 +47,7 @@ const OnboardingAssessmentPage: React.FC = () => {
   const [symptomDetail, setSymptomDetail] = useState(""); // 증상 상세 설명
   const [showRiskModal, setShowRiskModal] = useState<RiskLevel | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -74,21 +75,23 @@ const OnboardingAssessmentPage: React.FC = () => {
 
     // risk OK → 서버에 intake 저장
     setIsSubmitting(true);
+    setErrorMsg(null);
+
     try {
       const payload = {
         painArea: mapRegionToPainAreaCode(selectedRegion!),
         painLevel: painScore,
         goal: finalGoal,
         exerciseExperience: "BEGINNER" as const,
-        symptomDetail,
+        // symptomDetail: symptomDetail,
+        // TODO: symptomDetail은 Swagger 스펙에 추가되면 payload에 포함
       };
 
       // 1) 나중에 실제 서버 연동 시:
       // const res = await intakeApi.upsertMyIntake(payload);
-      // const intakeResult: IntakeResult = res.result; // swagger 구조에 맞게
+      // const intakeResult: IntakeResult = res; // swagger 구조에 맞게
 
-      // 2) 지금은 데모용 mock IntakeResult 생성
-
+      // 목. 나중에 돌아가면 삭제하기
       const now = new Date().toISOString();
       const intakeResult: IntakeResult = {
         intakeId: 1, // 나중에 백엔드 값으로 교체
@@ -100,14 +103,20 @@ const OnboardingAssessmentPage: React.FC = () => {
         updatedAt: now,
       };
 
-      console.log("[Mock] /users/me/intake 요청 바디:", payload);
-      console.log("[Mock] intakeResult:", intakeResult);
+      console.log("[API] /users/me/intake 요청 바디:", payload);
+      console.log("[API] intakeResult:", intakeResult);
 
       // ✅ 온보딩 완료 처리 (authStore + localStorage에 모두 저장)
       completeOnboarding(intakeResult);
 
 
       navigate("/app/home", { replace: true });
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        "문진 정보 저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+      setErrorMsg(msg);
+      console.log("[OnboardingAssessment] error:", err?.response?.data);
     } finally {
       setIsSubmitting(false);
     }
