@@ -20,6 +20,7 @@ const OnboardingProfilePage: React.FC = () => {
   const [height, setHeight] = useState(user?.height ? String(user.height) : "");
   const [weight, setWeight] = useState(user?.weight ? String(user.weight) : "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // 로그인 안 되어 있으면 로그인으로 돌려보내기
   useEffect(() => {
@@ -40,14 +41,8 @@ const OnboardingProfilePage: React.FC = () => {
     if (!user || !isValid) return;
 
     setIsSubmitting(true);
+    setErrorMsg(null);
     try {
-    // TODO: 나중에 실제 API 붙이기
-    // const updated = await userApi.updateMe(payload);
-    // setUser({ ...user, ...updated, profileCompleted: true });
-
-    // await new Promise((r) => setTimeout(r, 300)); // 데모용 딜레이
-
-    // 나중에 이거 주석 풀면 됨.
       // 1) 나중에 실제 API 붙일 때 사용할 payload
       const payload = {
         username: username.trim(),
@@ -55,8 +50,11 @@ const OnboardingProfilePage: React.FC = () => {
         age: Number(age),
         height: Number(height),
         weight: Number(weight),
+        // TODO: birthDate는 UI에서 입력받거나, 나이 기준으로 계산해서 넣도록 추후 보완
+        birthDate: "1990-01-01",
       };
 
+      // 목임. 나중에 돌아가면 삭제.
       // 2) 프론트 상태 업데이트 (profileCompleted 반영)
       setUser({
         ...user,
@@ -64,17 +62,24 @@ const OnboardingProfilePage: React.FC = () => {
         ...payload,
         profileCompleted: true,
       });
+      
 
-      // 2) 나중에 진짜 서버 호출 붙일 땐 이렇게 바꾸면 됨
-      // const updated = await userApi.updateMe(payload);
-      // setUser({
-      //   ...user,
-      //   ...updated,
-      //   profileCompleted: true,
-      // });
+      // 2) 실제 서버 호출로 프로필 저장
+      //    (userApi.createMe 내부에서 PATCH /users/me 호출하는 구조)
+      // const updatedUser = await userApi.createMe(payload);
 
-      // 3) 다음 단계(문진)로 이동
+      // 3) 전역 상태 업데이트 (서버가 내려준 profileCompleted 값을 신뢰)
+      // setUser(updatedUser);
+
+      // 4) 다음 단계(문진)로 이동
       navigate("/onboarding/assessment", { replace: true });
+    } catch (err: any) {
+      // 서버에서 내려주는 message가 있으면 우선 사용
+      const msg =
+        err?.response?.data?.message ||
+        "프로필 저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+      setErrorMsg(msg);
+      console.log("[OnboardingProfile] error:", err?.response?.data);
     } finally {
       setIsSubmitting(false);
     }
@@ -182,6 +187,10 @@ const OnboardingProfilePage: React.FC = () => {
               />
             </div>
           </div>
+
+          {errorMsg && (
+            <p className="text-xs text-red-500">{errorMsg}</p>
+          )}
 
           {/* 버튼 */}
           <div className="pt-2">

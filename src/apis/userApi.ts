@@ -16,6 +16,16 @@ export const userApi = {
     return mapUserProfileToAppUser(data.result);
   },
 
+  // 온보딩용: 최초 프로필 생성 → Swagger의 POST /users/me 사용
+  async createMe(payload: UpdateUserProfileRequest): Promise<AppUser> {
+    const { data } = await apiClient.post<ApiResponse<UserProfile>>(
+      "/users/me",
+      payload,
+    );
+    return mapUserProfileToAppUser(data.result);
+  },
+
+  // 옵션) 나중에 "설정 > 프로필 수정" 페이지에서 쓸 업데이트용 메서드
   async updateMe(payload: UpdateUserProfileRequest): Promise<AppUser> {
     const { data } = await apiClient.patch<ApiResponse<UserProfile>>(
       "/users/me",

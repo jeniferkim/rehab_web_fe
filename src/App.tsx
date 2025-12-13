@@ -16,6 +16,7 @@ import OnboardingAssessmentPage from './pages/OnboardingAccessmentPage'
 import ReportPage from './pages/ReportPage'
 import { ProtectedAppRoute } from './routes/ProtectedAppRoute'
 import ReminderSettingsPage from './pages/ReminderSettingsPage'
+import OAuthSuccessPage from './pages/OAuthSuccessPage'
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
           {/* 인증 전 페이지 */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/oauth/success" element={<OAuthSuccessPage />} />
           <Route path="/onboarding/profile" element={<OnboardingProfilePage />} />
           <Route path="/onboarding/assessment" element={<OnboardingAssessmentPage />} />
 

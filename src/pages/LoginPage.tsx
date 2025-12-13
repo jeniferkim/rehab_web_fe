@@ -5,11 +5,12 @@ import { useAuthStore } from "../stores/authStore";
 
 // 카카오 인가 URL 
 const KAKAO_AUTH_URL =
-  import.meta.env.KAKAO_AUTH_URL; 
+  import.meta.env.VITE_KAKAO_AUTH_URL; 
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
+  const devForceLogin = useAuthStore((state) => state.devForceLogin);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +28,16 @@ const LoginPage: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      await login({ email, password });
+
+      const useMock = import.meta.env.VITE_USE_MOCK_AUTH === "true";
+
+      if (useMock) {
+        // ✅ 백 없이 개발용 강제 로그인
+        devForceLogin();
+      } else {
+        // ✅ 실제 로그인 API
+        await login({ email, password });
+      }
 
       const currentUser = useAuthStore.getState().user;
 

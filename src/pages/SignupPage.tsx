@@ -48,7 +48,13 @@ const SignupPage: React.FC = () => {
         navigate("/app/home", { replace: true });
       }
     } catch (error) {
-      setErrorMsg("회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+      const axiosError = error as any;
+      const serverMessage =
+        axiosError?.response?.data?.message ??
+        "회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+
+      setErrorMsg(serverMessage);
+      console.log("회원가입 에러:", axiosError?.response?.data);
     } finally {
       setIsSubmitting(false);
     }
