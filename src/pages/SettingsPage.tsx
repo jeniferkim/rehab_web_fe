@@ -33,9 +33,10 @@ const SettingsPage: React.FC = () => {
       {/* --------------------------- */}
       <SettingsSection title="계정 및 알림">
         <ToggleItem
-          label="알림 설정"
+          label="알림 설정 (재활 리마인더)"
           icon={<HiOutlineBell size={20} className="text-gray-500" />}
           value={isNotificationEnabled}
+          onClick={() => navigate("/app/settings/reminder")}
           onToggle={toggleNotification}
         />
 

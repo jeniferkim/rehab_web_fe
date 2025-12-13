@@ -15,6 +15,7 @@ import OnboardingProfilePage from './pages/OnboardingProfilePage'
 import OnboardingAssessmentPage from './pages/OnboardingAccessmentPage'
 import ReportPage from './pages/ReportPage'
 import { ProtectedAppRoute } from './routes/ProtectedAppRoute'
+import ReminderSettingsPage from './pages/ReminderSettingsPage'
 
 
 function App() {
@@ -37,14 +38,14 @@ function App() {
               
               <Route path="routines" element={<RoutinesPage />} />
               <Route path="routines/new" element={<RoutineCreatePage />} />
-              {/* App 라우팅 설정 일부 */}
-              <Route path="/app/routines/:routineId" element={<RoutineDetailPage />} />
-              <Route path="/app/routines/:id/edit" element={<RoutineEditPage />} />
+              <Route path="routines/:routineId" element={<RoutineDetailPage />} />
+              <Route path="routines/:id/edit" element={<RoutineEditPage />} />
 
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="report" element={<ReportPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="settings/reminder" element={<ReminderSettingsPage />} />
             </Route>
           </Route>
 
