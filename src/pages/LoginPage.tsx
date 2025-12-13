@@ -3,10 +3,9 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 
-// 카카오 인가 URL (// 👶🏻 Todo: 백엔드 주소에 맞게 env로 빼두는 걸 추천)
+// 카카오 인가 URL 
 const KAKAO_AUTH_URL =
-  import.meta.env.VITE_KAKAO_AUTH_URL ??
-  "http://localhost:8080/oauth2/authorization/kakao"; // 예시 URL, 실제 주소로 변경
+  import.meta.env.KAKAO_AUTH_URL; 
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,6 +40,7 @@ const LoginPage: React.FC = () => {
       }
     } catch (error) {
       setErrorMsg("이메일 또는 비밀번호가 올바르지 않습니다.");
+      console.log("로그인 에러: ", error);
     } finally {
       setIsSubmitting(false);
     }
