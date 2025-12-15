@@ -6,7 +6,7 @@ import { persist } from "zustand/middleware";
 import { authApi } from "../apis/authApi";
 
 type AuthState = {
-   devForceLogin: () => void;   // dev용 임시 로그인
+  //  devForceLogin: () => void;   // dev용 임시 로그인
   user: AppUser | null;
   isAuthenticated: boolean;
 
@@ -15,17 +15,20 @@ type AuthState = {
   refreshToken: string | null;
 
   // 온보딩 진행 상황 + 결과
-  onboardingStep: number;          // 1, 2 ... 
-  intakeResult: IntakeResult | null;  // 온보딩에서 받은 값 저장 (Swagger 타입 그대로)
+  onboardingStep: number; // 1, 2 ...
+  intakeResult: IntakeResult | null; // 온보딩에서 받은 값 저장 (Swagger 타입 그대로)
 
   // 로그인 관련
   login: (params: { email: string; password: string }) => Promise<void>;
-  signup: (params: { email: string; password: string}) => Promise<void>;
+  signup: (params: { email: string; password: string }) => Promise<void>;
   logout: () => void;
   setUser: (user: AppUser | null) => void;
 
   // OAuth(카카오) 포함: 토큰 세팅용
-  setTokens: (params: { accessToken: string; refreshToken?: string | null }) => void;
+  setTokens: (params: {
+    accessToken: string;
+    refreshToken?: string | null;
+  }) => void;
 
   // 온보딩 액션
   setOnboardingStep: (step: number) => void;
@@ -57,7 +60,7 @@ export const useAuthStore = create<AuthState>()(
           onboardingCompleted: false,
         };
 
-              // 토큰도 대충 채워두면 좋음 (실제 API 안 타도 프론트는 돌아감)
+        // 토큰도 대충 채워두면 좋음 (실제 API 안 타도 프론트는 돌아감)
         set({
           user: dummyUser,
           isAuthenticated: true,
@@ -74,49 +77,35 @@ export const useAuthStore = create<AuthState>()(
 
       // 실제 로그인 api 연동
       login: async ({ email, password }) => {
+        // 1) 로그인 요청 → 토큰 받기
         const data = await authApi.login({ email, password });
 
-      //   const dummyUser: AppUser = {
-      //     id: 1,
-      //     username: "테스트 사용자",
-      //     email,
-      //     gender: "OTHER",
-      //     age: 0,
-      //     height: 0,
-      //     weight: 0,
-      //     profileCompleted: false,
-      //     onboardingCompleted: false,
-      //   };
+        // 1) 토큰 저장
+        localStorage.setItem("accessToken", data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem("refreshToken", data.refreshToken);
+        }
 
-      //   set({
-      //     user: dummyUser,
-      //     isAuthenticated: true,
-      //     onboardingStep: 1,
-      //     intakeResult: null,
-      //   });
+        // 이것도 백 준비되면!
+        // // 토큰 + 유저 세팅
+        set({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken ?? null,
+          user: data.user,
+          isAuthenticated: true,
+          onboardingStep: 1,
+          intakeResult: null,
+        });
+        //
+        // localStorage에도 저장 (axios 인터셉터 fallback용)
+        localStorage.setItem("accessToken", data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem("refreshToken", data.refreshToken);
+        }
       },
-
-
-      // 이것도 백 준비되면!
-      // // 토큰 + 유저 세팅
-      //   set({
-      //     accessToken: data.accessToken,
-      //     refreshToken: data.refreshToken ?? null,
-      //     user: data.user,
-      //     isAuthenticated: true,
-      //     onboardingStep: 1,
-      //     intakeResult: null,
-      //   });
-
-      //   // localStorage에도 저장 (axios 인터셉터 fallback용)
-      //   localStorage.setItem("accessToken", data.accessToken);
-      //   if (data.refreshToken) {
-      //     localStorage.setItem("refreshToken", data.refreshToken);
-      //   }
-      // },
-
+      //
       // 실제 회원가입 api 연동
-      signup: async ({ email, password }) => { 
+      signup: async ({ email, password }) => {
         await authApi.signup({
           email,
           password,

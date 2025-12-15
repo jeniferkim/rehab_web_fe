@@ -3,14 +3,12 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 
-// 카카오 인가 URL 
-const KAKAO_AUTH_URL =
-  import.meta.env.VITE_KAKAO_AUTH_URL; 
+// 카카오 인가 URL
+const KAKAO_AUTH_URL = import.meta.env.VITE_KAKAO_AUTH_URL;
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
-  const devForceLogin = useAuthStore((state) => state.devForceLogin);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,7 +31,7 @@ const LoginPage: React.FC = () => {
 
       if (useMock) {
         // ✅ 백 없이 개발용 강제 로그인
-        devForceLogin();
+        // devForceLogin();
       } else {
         // ✅ 실제 로그인 API
         await login({ email, password });
@@ -100,9 +98,7 @@ const LoginPage: React.FC = () => {
             />
           </div>
 
-          {errorMsg && (
-            <p className="text-xs text-red-500">{errorMsg}</p>
-          )}
+          {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
 
           <button
             type="submit"

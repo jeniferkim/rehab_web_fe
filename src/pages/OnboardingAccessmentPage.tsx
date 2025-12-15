@@ -4,8 +4,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
-// import { intakeApi } from "../apis/intakeApi";
 import type { IntakeResult } from "../types/apis/intake";
+import { intakeApi } from "../apis/intakeApi";
 
 const MSK_REGIONS = [
   "목 / 어깨",
@@ -24,7 +24,7 @@ const GOAL_PRESETS = [
   "자세를 교정하고 싶어요",
 ];
 
-const PAIN_SCORES = [1,2,3,4,5,6,7,8,9,10];
+const PAIN_SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 type RiskLevel = "ok" | "high";
 
@@ -47,7 +47,8 @@ const OnboardingAssessmentPage: React.FC = () => {
   const [symptomDetail, setSymptomDetail] = useState(""); // 증상 상세 설명
   const [showRiskModal, setShowRiskModal] = useState<RiskLevel | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -88,27 +89,26 @@ const OnboardingAssessmentPage: React.FC = () => {
       };
 
       // 1) 나중에 실제 서버 연동 시:
-      // const res = await intakeApi.upsertMyIntake(payload);
-      // const intakeResult: IntakeResult = res; // swagger 구조에 맞게
+      const res = await intakeApi.upsertMyIntake(payload);
+      const intakeResult: IntakeResult = res; // swagger 구조에 맞게
 
       // 목. 나중에 돌아가면 삭제하기
-      const now = new Date().toISOString();
-      const intakeResult: IntakeResult = {
-        intakeId: 1, // 나중에 백엔드 값으로 교체
-        painArea: payload.painArea,
-        painLevel: payload.painLevel,
-        goal: payload.goal,
-        exerciseExperience: payload.exerciseExperience,
-        createdAt: now,
-        updatedAt: now,
-      };
+      // const now = new Date().toISOString();
+      // const intakeResult: IntakeResult = {
+      // intakeId: 1, // 나중에 백엔드 값으로 교체
+      // painArea: payload.painArea,
+      // painLevel: payload.painLevel,
+      // goal: payload.goal,
+      // exerciseExperience: payload.exerciseExperience,
+      // createdAt: now,
+      // updatedAt: now,
+      // };
 
       console.log("[API] /users/me/intake 요청 바디:", payload);
       console.log("[API] intakeResult:", intakeResult);
 
       // ✅ 온보딩 완료 처리 (authStore + localStorage에 모두 저장)
       completeOnboarding(intakeResult);
-
 
       navigate("/app/home", { replace: true });
     } catch (err: any) {
@@ -237,7 +237,9 @@ const OnboardingAssessmentPage: React.FC = () => {
               <h2 className="text-sm font-semibold text-gray-900">
                 이번 재활에서 가장 중요한 목표
               </h2>
-              <span className="text-[11px] text-gray-400">선택 + 자유 입력</span>
+              <span className="text-[11px] text-gray-400">
+                선택 + 자유 입력
+              </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -302,8 +304,8 @@ const OnboardingAssessmentPage: React.FC = () => {
               병원 진료가 먼저 필요해요
             </h2>
             <p className="mb-4 text-sm text-gray-600">
-              현재 통증 정도는 RehabAI만으로는 충분하지 않을 수 있어요.
-              가까운 병원이나 응급실에 방문해 전문의 진료를 먼저 받아주세요.
+              현재 통증 정도는 RehabAI만으로는 충분하지 않을 수 있어요. 가까운
+              병원이나 응급실에 방문해 전문의 진료를 먼저 받아주세요.
             </p>
             <button
               type="button"
