@@ -14,6 +14,7 @@ export interface IntakeRequest {
 
 export interface IntakeResult {
   intakeId: number;
+  userId: number;
   painArea: PainAreaCode;
   painLevel: number;
   goal: string;

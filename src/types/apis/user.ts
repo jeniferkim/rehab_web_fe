@@ -32,4 +32,5 @@ export interface UpdateUserProfileRequest {
   age: number;
   height: number;
   weight: number;
+  birthDate: string; // 얘는 왜 있는거야 갑자기
 }
