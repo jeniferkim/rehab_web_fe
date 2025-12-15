@@ -34,19 +34,25 @@ const OAuthSuccessPage: React.FC = () => {
         return;
       }
 
-      // 1) 토큰 저장
-      setTokens({ accessToken, refreshToken });
+      // 1) 토큰 저장 (refreshToken이 없을 수도 있으니 안전하게)
+      setTokens({
+        accessToken,
+        ...(refreshToken ? { refreshToken } : {}),
+      });
 
       try {
-        // 2) 내 정보 조회
+        // 2) 내 정보 조회 (여기서 200 떨어지면 “로그인 성공” 확정)
         const me: AppUser = await authApi.me();
         setUser(me);
-      } catch {
-        // 유저 정보 못 불러와도 일단 홈으로는 보냄
-      }
 
-      // 3) 홈으로 이동
-      navigate("/onboarding/profile", { replace: true });
+        // 3) 온보딩 여부에 따라 이동
+        const next = me?.onboardingCompleted ? "/app/home" : "/onboarding/profile";
+        navigate(next, { replace: true });
+      } catch (err) {
+        console.log("[OAuthSuccess] me() failed:", err);
+        setMessage("로그인은 됐지만 사용자 정보를 불러오지 못했어요. 다시 시도해 주세요.");
+        return;
+      };
     };
 
     run();
