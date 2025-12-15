@@ -23,15 +23,6 @@ const formatDateLabel = (dateStr: string) => {
   return `${m}/${d}`;
 };
 
-const formatSecondsToTime = (sec: number) => {
-  if (!sec) return "0분";
-  const minutes = Math.round(sec / 60);
-  if (minutes < 60) return `${minutes}분`;
-  const hours = Math.floor(minutes / 60);
-  const restMin = minutes % 60;
-  return restMin > 0 ? `${hours}시간 ${restMin}분` : `${hours}시간`;
-};
-
 /* ------------------------ 주간 트렌드 그래프 ------------------------- */
 
 type WeeklyTrendPoint = {
@@ -94,7 +85,6 @@ const WeeklyTrendChart: React.FC<WeeklyTrendChartProps> = ({ data }) => {
             }
             labelFormatter={(label) => `${label}`}
           />
-          {/* 완료율 막대 – 좀 더 굵게 + 파란 톤 */}
           <Bar
             yAxisId="left"
             dataKey="completionRate"
@@ -102,7 +92,6 @@ const WeeklyTrendChart: React.FC<WeeklyTrendChartProps> = ({ data }) => {
             radius={[8, 8, 4, 4]}
             fill="#2563EB"
           />
-          {/* 통증 라인 – 같은 계열의 진한 파란색 */}
           <Line
             yAxisId="right"
             type="monotone"
@@ -144,21 +133,16 @@ const ReportPage: React.FC = () => {
 
       try {
         const result = await reportApi.getProgress({ range });
-
         console.log("[ReportPage] progress result", result);
 
-        if (!cancelled) {
-          setProgress(result);
-        }
+        if (!cancelled) setProgress(result);
       } catch (e) {
         console.error(e);
         if (!cancelled) {
           setProgressError("진행률 리포트를 불러오는 중 문제가 생겼어요.");
         }
       } finally {
-        if (!cancelled) {
-          setIsLoadingProgress(false);
-        }
+        if (!cancelled) setIsLoadingProgress(false);
       }
     };
 
@@ -175,14 +159,14 @@ const ReportPage: React.FC = () => {
     if (!progress) return [];
 
     const exerciseMap = new Map(
-      progress.exerciseStats.dailyData.map((d) => [d.date, d]),
+      progress.exerciseStats.dailyData.map((d) => [d.date, d])
     );
     const painMap = new Map(
-      progress.painStats.dailyData.map((d) => [d.date, d]),
+      progress.painStats.dailyData.map((d) => [d.date, d])
     );
 
     const dates = Array.from(
-      new Set([...exerciseMap.keys(), ...painMap.keys()]),
+      new Set([...exerciseMap.keys(), ...painMap.keys()])
     ).sort();
 
     return dates.map((date) => {
@@ -197,18 +181,19 @@ const ReportPage: React.FC = () => {
     });
   }, [progress]);
 
+  // ✅ 운동 시간(durationSec) 제거한 병합 데이터
   const dailyMerged = useMemo(() => {
     if (!progress) return [];
 
     const exerciseMap = new Map(
-      progress.exerciseStats.dailyData.map((d) => [d.date, d]),
+      progress.exerciseStats.dailyData.map((d) => [d.date, d])
     );
     const painMap = new Map(
-      progress.painStats.dailyData.map((d) => [d.date, d]),
+      progress.painStats.dailyData.map((d) => [d.date, d])
     );
 
     const dates = Array.from(
-      new Set([...exerciseMap.keys(), ...painMap.keys()]),
+      new Set([...exerciseMap.keys(), ...painMap.keys()])
     ).sort();
 
     return dates.map((date) => {
@@ -218,7 +203,6 @@ const ReportPage: React.FC = () => {
       return {
         date,
         completionRate: ex?.completionRate ?? null,
-        durationSec: ex?.durationSec ?? 0,
         avgPain: pain?.avgPain ?? null,
       };
     });
@@ -235,6 +219,7 @@ const ReportPage: React.FC = () => {
           <h1 className="mt-2 text-2xl font-extrabold text-gray-900">
             지난 기간의 재활 기록을 정리했어요.
           </h1>
+
           {weekly && !weeklyError && (
             <p className="mt-2 text-sm font-semibold text-blue-700">
               {weekly.weeklyHighlight}
@@ -298,7 +283,7 @@ const ReportPage: React.FC = () => {
           {!progressError && <WeeklyTrendChart data={weeklyTrendData} />}
         </div>
 
-        {/* 오른쪽 KPI – 파란 톤으로 통일 */}
+        {/* 오른쪽 KPI – 운동 시간 카드 제거 */}
         <div className="flex flex-col gap-3">
           <div className="rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3">
             <p className="text-[11px] font-medium text-blue-700">
@@ -310,23 +295,12 @@ const ReportPage: React.FC = () => {
           </div>
 
           <div className="rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3">
-            <p className="text-[11px] font-medium text-blue-700">총 운동 시간</p>
-            <p className="mt-1 text-2xl font-extrabold text-blue-900">
-              {progress
-                ? formatSecondsToTime(
-                    progress.exerciseStats.totalDurationSec,
-                  )
-                : "0분"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3">
             <p className="text-[11px] font-medium text-blue-700">
               평균 통증 점수
             </p>
             <p className="mt-1 text-2xl font-extrabold text-blue-900">
               {progress?.painStats.avgPainScore != null
-                ? progress.painStats.avgPainScore.toFixed
+                ? typeof progress.painStats.avgPainScore === "number"
                   ? progress.painStats.avgPainScore.toFixed(1)
                   : progress.painStats.avgPainScore
                 : "0.0"}
@@ -340,12 +314,13 @@ const ReportPage: React.FC = () => {
             </p>
             <p className="mt-1 text-2xl font-extrabold">
               {weekly?.recoveryPrediction != null
-                ? weekly.recoveryPrediction.toFixed
+                ? typeof weekly.recoveryPrediction === "number"
                   ? weekly.recoveryPrediction.toFixed(1)
                   : weekly.recoveryPrediction
                 : "0.0"}
               점
             </p>
+
             {("avgCompletionRate" in weeklyMetrics ||
               "totalExercises" in weeklyMetrics) && (
               <p className="mt-2 text-[11px] text-blue-100/80">
@@ -377,67 +352,67 @@ const ReportPage: React.FC = () => {
           <p className="text-xs text-red-500">{progressError}</p>
         )}
 
-        {!isLoadingProgress &&
-          !progressError &&
-          dailyMerged.length === 0 && (
-            <p className="text-xs text-gray-400">
-              선택한 기간에 기록된 운동 로그가 없습니다.
-            </p>
-          )}
+        {!isLoadingProgress && !progressError && dailyMerged.length === 0 && (
+          <p className="text-xs text-gray-400">
+            선택한 기간에 기록된 운동 로그가 없습니다.
+          </p>
+        )}
 
-        {!isLoadingProgress &&
-          !progressError &&
-          dailyMerged.length > 0 && (
-            <div className="overflow-hidden rounded-2xl border border-gray-100">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr className="text-[13px] text-gray-600">
-                    <th className="px-4 py-2.5 text-left font-semibold">
-                      날짜
-                    </th>
-                    <th className="px-4 py-2.5 text-right font-semibold">
-                      완료율
-                    </th>
-                    <th className="px-4 py-2.5 text-right font-semibold">
-                      운동 시간
-                    </th>
-                    <th className="px-4 py-2.5 text-right font-semibold">
-                      평균 통증
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dailyMerged.map((row, idx) => {
-                    const isEven = idx % 2 === 0;
-                    const rowBg = isEven ? "bg-white" : "bg-slate-50/80";
-                    return (
-                      <tr
-                        key={row.date}
-                        className={`${rowBg} text-gray-800`}
-                      >
-                        <td className="px-4 py-2.5">
-                          {formatDateLabel(row.date)}
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
-                          {row.completionRate != null
-                            ? `${row.completionRate}%`
-                            : "-"}
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
-                          {row.durationSec
-                            ? formatSecondsToTime(row.durationSec)
-                            : "-"}
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
-                          {row.avgPain != null ? `${row.avgPain}점` : "-"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+        {!isLoadingProgress && !progressError && dailyMerged.length > 0 && (
+          <div className="overflow-hidden rounded-2xl border border-gray-100">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr className="text-[13px] text-gray-600">
+                  <th className="w-20 px-4 py-2.5 text-left font-semibold">
+                    날짜
+                  </th>
+                  <th className="px-4 py-2.5 text-center font-semibold">
+                    완료율
+                  </th>
+                  <th className="w-24 px-4 py-2.5 text-right font-semibold">
+                    평균 통증
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {dailyMerged.map((row, idx) => {
+                  const isEven = idx % 2 === 0;
+                  const rowBg = isEven ? "bg-white" : "bg-slate-50/80";
+                  return (
+                    <tr key={row.date} className={`${rowBg} text-gray-800`}>
+                      <td className="px-4 py-2.5">
+                        {formatDateLabel(row.date)}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        {row.completionRate == null ? (
+                          <span className="text-gray-400">-</span>
+                        ) : (
+                          <div className="mx-auto flex w-[220px] items-center gap-3">
+                            {/* 미니 바 */}
+                            <div className="h-2.5 flex-1 rounded-full bg-gray-200">
+                              <div
+                                className="h-2.5 rounded-full bg-blue-600"
+                                style={{ width: `${row.completionRate}%` }}
+                              />
+                            </div>
+
+                            {/* 퍼센트 */}
+                            <span className="w-10 text-right text-sm font-semibold text-gray-700">
+                              {row.completionRate}%
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        {row.avgPain != null ? `${row.avgPain}점` : "-"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );
