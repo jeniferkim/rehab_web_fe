@@ -8,7 +8,9 @@ export const ProtectedAppRoute = () => {
 
   // 2) 온보딩 완료 여부 판단
   const hasCompletedOnboarding =
-    !!(user && user.onboardingCompleted) || !!intakeResult || onboardingStep >= 99;
+    !!(user && user.onboardingCompleted) ||
+    !!intakeResult ||
+    onboardingStep >= 99;
 
   if (!hasCompletedOnboarding) {
     return <Navigate to="/onboarding/profile" replace />;

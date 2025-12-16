@@ -12,7 +12,8 @@ export type SignupRequest = {
   email: string;
   password: string;
   passwordCheck: string;
-  emailVerified?: boolean; // 일단 우회. 나중에 구현
+  // emailVerified?: boolean; // 일단 우회. 나중에 구
+  emailVerified: false;
 };
 
 export type AuthResponse = {

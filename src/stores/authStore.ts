@@ -110,7 +110,7 @@ export const useAuthStore = create<AuthState>()(
           email,
           password,
           passwordCheck: password,
-          emailVerified: true, // 임시로 true. 추후 개발
+          emailVerified: false, // 임시로 false. 추후 개발
         });
         // 여기서는 자동 로그인까지 할지, 그냥 “성공만 알리고 로그인 페이지로 보내기” 할지 선택
       },
