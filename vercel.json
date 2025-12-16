@@ -2,6 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
+
       "destination": "http://52.78.170.78:8080/api/:path*"
     },
     {
@@ -9,5 +10,7 @@
       "destination": "http://52.78.170.78:8080/auth/:path*"
     },
     { "source": "/(.*)", "destination": "/index.html" }
+      "destination": "http://52.78.170.78:8080/:path*"
+    }
   ]
 }

@@ -46,13 +46,19 @@ const OAuthSuccessPage: React.FC = () => {
         setUser(me);
 
         // 3) 온보딩 여부에 따라 이동
-        const next = me?.onboardingCompleted ? "/app/home" : "/onboarding/profile";
+        const next = me?.onboardingCompleted
+          ? "/app/home"
+          : "/onboarding/profile";
         navigate(next, { replace: true });
       } catch (err) {
         console.log("[OAuthSuccess] me() failed:", err);
-        setMessage("로그인은 됐지만 사용자 정보를 불러오지 못했어요. 다시 시도해 주세요.");
+        setMessage(
+          "로그인은 됐지만 사용자 정보를 불러오지 못했어요. 다시 시도해 주세요."
+        );
+        navigate("/onboarding/profile");
+
         return;
-      };
+      }
     };
 
     run();

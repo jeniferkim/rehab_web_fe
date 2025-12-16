@@ -16,7 +16,7 @@ export interface ExerciseLog {
   painAfter: number;
   rpe: number; // 자각적 운동강도
   completionRate: number; // 0~100 (%)
-  durationSec: number; // 운동 시간(초)
+  durationSec?: number; // 운동 시간(초)
   notes: string;
   status: ExerciseLogStatus;
   createdAt: string;
@@ -37,6 +37,6 @@ export interface CreateExerciseLogRequest {
   painAfter: number;
   rpe: number;
   completionRate: number;
-  durationSec: number;
+  durationSec?: number;
   notes: string;
 }
