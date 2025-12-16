@@ -39,3 +39,37 @@ export type AiRecommendationResponse = {
     aiInferenceLogId?: number;
   };
 };
+
+// 1) Gemini parse 결과
+export type AiParsedPrompt = {
+  disease: string;
+  level: string;
+  goal: string;
+};
+
+// 2) CustomAI 초안 루틴
+export type AiDraftRoutineItem = {
+  category: string;
+  time: string;
+  action: string;
+};
+
+export type AiDraftRoutine = {
+  title: string;
+  items: AiDraftRoutineItem[];
+};
+
+// 3) Gemini refine 결과 (앱 스케줄)
+export type AiRefinedRoutineItem = {
+  time: string;
+  timeMode: "point" | "range";
+  type: "exercise" | "meal" | "medication";
+  detail: string;
+};
+
+// (선택) 최종 “저장용” payload를 이 단계에서 정의해두면 편함
+export type AiRoutineFlowResult = {
+  parsed: AiParsedPrompt;
+  draft: AiDraftRoutine;
+  refined: AiRefinedRoutineItem[];
+};
