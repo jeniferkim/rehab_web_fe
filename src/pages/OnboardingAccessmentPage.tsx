@@ -26,10 +26,30 @@ const GOAL_PRESETS = [
 
 const PAIN_SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-type RiskLevel = "ok" | "high";
+type RiskLevel = "ok" | "warn" | "high";
 
-function triageRisk(painScore: number): RiskLevel {
-  if (painScore >= 8) return "high";
+/** 통증 구간 라벨(UX 설명용) */
+const PAIN_BUCKETS = [
+  { min: 1, max: 3, label: "경미: 일상생활에 지장 거의 없음" },
+  { min: 4, max: 6, label: "중등도: 움직일 때 불편함" },
+  { min: 7, max: 8, label: "주의: 동작이 어려울 수 있음" },
+  { min: 9, max: 10, label: "심함: 참기 힘들거나 움직이기 어려움" },
+] as const;
+
+function getPainBucketLabel(score: number) {
+  const b = PAIN_BUCKETS.find((x) => score >= x.min && score <= x.max);
+  return b?.label ?? "";
+}
+
+/**
+ * 프론트 안전장치용 triage (진단 X)
+ * - 9~10: 즉시 제한(high)
+ * - 7~8: 기능 제한이 "예"면 제한(high), 아니면 경고(warn)
+ * - 그 외: ok
+ */
+function triageRisk(painScore: number, hasFunctionalLimit: boolean): RiskLevel {
+  if (painScore >= 9) return "high";
+  if (painScore >= 7) return hasFunctionalLimit ? "high" : "warn";
   return "ok";
 }
 
@@ -40,11 +60,14 @@ const OnboardingAssessmentPage: React.FC = () => {
 
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [painScore, setPainScore] = useState<number | null>(null);
+  const [hasFunctionalLimit, setHasFunctionalLimit] = useState<boolean>(false);
+
   const [selectedGoalPreset, setSelectedGoalPreset] = useState<string | null>(
     null
   );
   const [customGoal, setCustomGoal] = useState("");
   const [symptomDetail, setSymptomDetail] = useState(""); // 증상 상세 설명
+  /** warn/high 모달 분기용 */
   const [showRiskModal, setShowRiskModal] = useState<RiskLevel | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -64,13 +87,21 @@ const OnboardingAssessmentPage: React.FC = () => {
     e.preventDefault();
     if (!isValid || painScore === null) return;
 
-    const risk = triageRisk(painScore);
-
     // TODO: 문진 값 저장
     // saveAssessment({ region: selectedRegion, painScore, goal: finalGoal });
 
+    const risk = triageRisk(painScore, hasFunctionalLimit);
+
     if (risk === "high") {
       setShowRiskModal("high");
+      return;
+    }
+
+    if (risk === "warn") {
+      setShowRiskModal("warn");
+      // warn은 "운동 가능하되 낮은 강도/주의" 같은 화면으로 보내거나,
+      // 사용자가 "확인" 누르면 다음 단계로 진행시키는 방식이 자연스러움.
+      // 여기서는 일단 모달 띄우고 return.
       return;
     }
 
@@ -174,38 +205,66 @@ const OnboardingAssessmentPage: React.FC = () => {
           <div className="h-px bg-gray-100" />
 
           {/* 2. 통증 정도 (숫자 칩 + 미니 설명 한 줄) */}
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-900">
-                현재 통증 정도
-              </h2>
-              <span className="text-[11px] text-gray-400">0–10</span>
+          {/* 통증 점수 선택 */}
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-gray-800">
+              현재 통증 수준
             </div>
-            <p className="text-[11px] text-gray-500">
-              0은 전혀 아프지 않음, 10은 참기 힘들 정도예요.
-            </p>
 
-            <div className="grid grid-cols-5 gap-2">
-              {PAIN_SCORES.map((score) => {
-                const isActive = painScore === score;
+            <div className="flex flex-wrap gap-2">
+              {PAIN_SCORES.map((s) => {
+                const isActive = painScore === s;
+                // 7 이상이면 시각적으로 경고 톤
+                const isCaution = s >= 7;
                 return (
                   <button
-                    key={score}
+                    key={s}
                     type="button"
-                    onClick={() => setPainScore(score)}
+                    onClick={() => setPainScore(s)}
                     className={[
-                      "h-8 rounded-full border text-xs font-semibold transition",
+                      "h-10 w-10 rounded-full border text-sm font-semibold transition",
                       isActive
-                        ? "border-blue-500 bg-blue-500 text-white"
-                        : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-white",
+                        ? "border-blue-600 bg-blue-50 text-blue-700"
+                        : "border-gray-200 bg-white text-gray-700",
+                      !isActive && isCaution ? "ring-1 ring-orange-200" : "",
                     ].join(" ")}
                   >
-                    {score}
+                    {s}
                   </button>
                 );
               })}
             </div>
-          </section>
+
+            {painScore != null && (
+              <div className="rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                <div className="font-medium">선택: {painScore} / 10</div>
+                <div className="text-gray-600">
+                  {getPainBucketLabel(painScore)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 기능 제한 확인 질문(추가) */}
+          <div className="mt-4 rounded-xl border bg-white p-4">
+            <div className="text-sm font-medium text-gray-800">
+              통증으로 인해 일상 동작이 어렵거나, 가만히 있어도 통증이
+              지속되나요?
+            </div>
+            <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={hasFunctionalLimit}
+                onChange={(e) => setHasFunctionalLimit(e.target.checked)}
+                className="h-4 w-4"
+              />
+              네, 기능 제한이 있어요
+            </label>
+            <p className="mt-2 text-xs text-gray-500">
+              * 본 질문은 의료 진단이 아니라, 운동 제공 범위를 안전하게 제한하기
+              위한 확인 절차입니다.
+            </p>
+          </div>
 
           <div className="h-px bg-gray-100" />
 
