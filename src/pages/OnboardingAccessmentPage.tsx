@@ -41,12 +41,13 @@ function getPainBucketLabel(score: number) {
   return b?.label ?? "";
 }
 
-/**
+/*
  * 프론트 안전장치용 triage (진단 X)
- * - 9~10: 즉시 제한(high)
- * - 7~8: 기능 제한이 "예"면 제한(high), 아니면 경고(warn)
- * - 그 외: ok
+ * - high: 운동 제공 제한 + 의료 상담 권고
+ * - warn: 저강도/주의 안내 후 사용자 선택
+ * - ok: 일반 진행
  */
+
 function triageRisk(painScore: number, hasFunctionalLimit: boolean): RiskLevel {
   if (painScore >= 9) return "high";
   if (painScore >= 7) return hasFunctionalLimit ? "high" : "warn";
