@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import type { IntakeResult } from "../types/apis/intake";
-import { intakeApi } from "../apis/intakeApi";
+// import { intakeApi } from "../apis/intakeApi";
 
 const MSK_REGIONS = [
   "목 / 어깨",
@@ -88,25 +88,15 @@ const OnboardingAssessmentPage: React.FC = () => {
     e.preventDefault();
     if (!isValid || painScore === null) return;
 
-    // TODO: 문진 값 저장
-    // saveAssessment({ region: selectedRegion, painScore, goal: finalGoal });
-
     const risk = triageRisk(painScore, hasFunctionalLimit);
 
+    // ✅ high는 기존 그대로: 모달 띄우고 멈춤
     if (risk === "high") {
       setShowRiskModal("high");
       return;
     }
 
-    if (risk === "warn") {
-      setShowRiskModal("warn");
-      // warn은 "운동 가능하되 낮은 강도/주의" 같은 화면으로 보내거나,
-      // 사용자가 "확인" 누르면 다음 단계로 진행시키는 방식이 자연스러움.
-      // 여기서는 일단 모달 띄우고 return.
-      return;
-    }
-
-    // risk OK → 서버에 intake 저장
+    // ✅ 시연용 우회: warn/ok는 서버 저장 없이 바로 홈으로
     setIsSubmitting(true);
     setErrorMsg(null);
 
@@ -116,39 +106,27 @@ const OnboardingAssessmentPage: React.FC = () => {
         painLevel: painScore,
         goal: finalGoal,
         exerciseExperience: "BEGINNER" as const,
-        // symptomDetail: symptomDetail,
-        // TODO: symptomDetail은 Swagger 스펙에 추가되면 payload에 포함
+        // symptomDetail: symptomDetail, // 스펙 생기면 추가
       };
 
-      // 1) 나중에 실제 서버 연동 시:
-      const res = await intakeApi.upsertMyIntake(payload);
-      const intakeResult: IntakeResult = res; // swagger 구조에 맞게
+      // ✅ 시연용 목 IntakeResult (백엔드 응답 형태 흉내)
+      const now = new Date().toISOString();
+      const mockIntakeResult: IntakeResult = {
+        userId: 1,
+        intakeId: 1,
+        painArea: payload.painArea,
+        painLevel: payload.painLevel,
+        goal: payload.goal,
+        exerciseExperience: payload.exerciseExperience,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-      // 목. 나중에 돌아가면 삭제하기
-      // const now = new Date().toISOString();
-      // const intakeResult: IntakeResult = {
-      // intakeId: 1, // 나중에 백엔드 값으로 교체
-      // painArea: payload.painArea,
-      // painLevel: payload.painLevel,
-      // goal: payload.goal,
-      // exerciseExperience: payload.exerciseExperience,
-      // createdAt: now,
-      // updatedAt: now,
-      // };
+      console.log("[DEMO] intake payload:", payload);
+      console.log("[DEMO] mockIntakeResult:", mockIntakeResult);
 
-      console.log("[API] /users/me/intake 요청 바디:", payload);
-      console.log("[API] intakeResult:", intakeResult);
-
-      // ✅ 온보딩 완료 처리 (authStore + localStorage에 모두 저장)
-      completeOnboarding(intakeResult);
-
+      completeOnboarding(mockIntakeResult);
       navigate("/app/home", { replace: true });
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        "문진 정보 저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
-      setErrorMsg(msg);
-      console.log("[OnboardingAssessment] error:", err?.response?.data);
     } finally {
       setIsSubmitting(false);
     }
