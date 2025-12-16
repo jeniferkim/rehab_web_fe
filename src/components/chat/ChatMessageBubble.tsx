@@ -55,7 +55,10 @@ const ChatMessageBubble: React.FC<Props> = ({ message }) => {
 
           <div className="flex flex-col gap-2">
             {message.recommendations.map((r) => (
-              <div key={r.exerciseId} className="rounded-xl border bg-gray-50 p-3">
+              <div
+                key={r.exerciseId}
+                className="rounded-xl border bg-gray-50 p-3"
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="font-semibold">{r.title}</div>
@@ -97,7 +100,7 @@ const ChatMessageBubble: React.FC<Props> = ({ message }) => {
       <AiAvatar />
 
       <div className="max-w-[70%] rounded-3xl rounded-bl-md bg-white px-4 py-3 text-sm leading-relaxed text-gray-900 shadow-sm">
-        {message.isTyping ? <TypingDots /> : message.text}
+        {message ? <TypingDots /> : message} {/* 오류 잡음 */}
       </div>
     </div>
   );
