@@ -19,11 +19,18 @@ const DEFAULT_TIME = "21:00"; // 기본 21시
 const ReminderSettingsPage: React.FC = () => {
   const navigate = useNavigate();
 
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 1800);
+  };
+
   const {
     reminders,
     loading,
     saving,
-    error,
+    // error,
     fetchReminders,
     createReminder,
     updateReminder,
@@ -37,9 +44,8 @@ const ReminderSettingsPage: React.FC = () => {
   // EXERCISE + PUSH 리마인더 한 개
   const exerciseReminder = useMemo(
     () =>
-      reminders.find(
-        (r) => r.type === "EXERCISE" && r.channel === "PUSH"
-      ) ?? null,
+      reminders.find((r) => r.type === "EXERCISE" && r.channel === "PUSH") ??
+      null,
     [reminders]
   );
 
@@ -74,6 +80,8 @@ const ReminderSettingsPage: React.FC = () => {
     // HTML time input은 "HH:MM" 형식
     // rule은 일단 "HH:mm" 문자열 그대로 저장 (나중에 BE랑 포맷 맞춰도 됨)
     const rule = time;
+
+    showToast("리마인더가 저장됐어요!");
 
     try {
       if (!exerciseReminder) {
@@ -160,16 +168,20 @@ const ReminderSettingsPage: React.FC = () => {
         </div>
 
         {/* 시간 선택 */}
-        <div className="mb-4 space-y-1">
-          <label className="text-xs font-medium text-gray-700">
-            알림 시간
-          </label>
-          <input
-            type="time"
-            value={time}
-            onChange={handleTimeChange}
-            className="w-40 rounded-lg border px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          />
+        <div className="mb-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-gray-700">
+              알림 시간
+            </label>
+
+            <input
+              type="time"
+              value={time}
+              onChange={handleTimeChange}
+              className="w-44 rounded-lg border px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
           <p className="text-[11px] text-gray-500">
             예: 21:00으로 설정하면 매일 밤 9시에 운동 알림이 발송돼요.
           </p>
@@ -182,11 +194,9 @@ const ReminderSettingsPage: React.FC = () => {
           </p>
         )}
 
-        {/* 에러 메시지 */}
-        {(localError || error) && (
-          <p className="mb-3 text-xs text-red-500">
-            {localError || error}
-          </p>
+        {/* 에러 메시지 (시연용: 로컬 검증 에러만 노출) */}
+        {localError && (
+          <p className="mb-3 text-xs text-red-500">{localError}</p>
         )}
 
         {/* 액션 버튼 */}
@@ -213,6 +223,12 @@ const ReminderSettingsPage: React.FC = () => {
       {loading && (
         <div className="mt-3 text-xs text-gray-500">
           리마인더 정보를 불러오는 중이에요…
+        </div>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-black px-4 py-3 text-sm text-white shadow-lg">
+          {toast}
         </div>
       )}
     </div>

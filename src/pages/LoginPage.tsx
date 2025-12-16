@@ -65,7 +65,7 @@ const LoginPage: React.FC = () => {
         {/* 로고 & 문구 */}
         <div className="mb-10 flex flex-col items-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-100">
-            <span className="text-2xl">📈</span>
+            <span className="text-2xl">🤼</span>
           </div>
           <div className="text-center">
             <p className="text-2xl font-extrabold text-blue-600">Rehab</p>

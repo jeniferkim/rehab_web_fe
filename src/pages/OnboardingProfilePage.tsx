@@ -8,13 +8,12 @@ import type { Gender } from "../types/apis/user";
 // import { userApi } from "../apis/userApi";
 
 const OnboardingProfilePage: React.FC = () => {
-  
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
 
   const [username, setUsername] = useState(user?.username ?? "");
   const [gender, setGender] = useState<Gender | "">(
-    (user?.gender as Gender) ?? "",
+    (user?.gender as Gender) ?? ""
   );
   const [age, setAge] = useState(user?.age ? String(user.age) : "");
   const [height, setHeight] = useState(user?.height ? String(user.height) : "");
@@ -30,11 +29,7 @@ const OnboardingProfilePage: React.FC = () => {
   }, [user, navigate]);
 
   const isValid =
-    username.trim() &&
-    gender &&
-    age.trim() &&
-    height.trim() &&
-    weight.trim();
+    username.trim() && gender && age.trim() && height.trim() && weight.trim();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +57,6 @@ const OnboardingProfilePage: React.FC = () => {
         ...payload,
         profileCompleted: true,
       });
-      
 
       // 2) 실제 서버 호출로 프로필 저장
       //    (userApi.createMe 내부에서 PATCH /users/me 호출하는 구조)
@@ -92,9 +86,7 @@ const OnboardingProfilePage: React.FC = () => {
       <div className="w-full max-w-md rounded-2xl bg-white px-6 py-8 shadow-md">
         {/* 상단 타이틀 */}
         <header className="mb-6">
-          <p className="text-xs font-semibold text-blue-600">
-            온보딩 · STEP 1
-          </p>
+          <p className="text-xs font-semibold text-blue-600">온보딩 · STEP 1</p>
           <h1 className="mt-1 text-2xl font-bold text-gray-900">
             기본 정보를 알려주세요
           </h1>
@@ -112,7 +104,7 @@ const OnboardingProfilePage: React.FC = () => {
             </label>
             <input
               type="text"
-              placeholder="예: 김지원 / 지원님"
+              placeholder="예: 김지원 / 젠"
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -188,9 +180,7 @@ const OnboardingProfilePage: React.FC = () => {
             </div>
           </div>
 
-          {errorMsg && (
-            <p className="text-xs text-red-500">{errorMsg}</p>
-          )}
+          {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
 
           {/* 버튼 */}
           <div className="pt-2">
