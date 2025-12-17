@@ -2,7 +2,7 @@
 
 import AiRoutineSection from "../components/routine/AiRoutineSection";
 import MyRoutineSection from "../components/routine/MyRoutineSection";
-// import { useRoutineStore } from "../stores/routineStore"; 
+// import { useRoutineStore } from "../stores/routineStore";
 // import { mockMyRoutines } from "../mocks/routineMocks";
 
 const RoutinesPage: React.FC = () => {
