@@ -192,7 +192,7 @@ const OnboardingProfilePage: React.FC = () => {
           {/* ✅ 주소 */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-800">
-              거주 지역(데모용)
+              거주 지역
             </label>
             <input
               type="text"

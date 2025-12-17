@@ -23,7 +23,7 @@ export const AiRoutineCard: React.FC<Props> = ({ routine }) => {
       onClick={handleClick}
       className="min-w-[220px] flex-1 rounded-3xl bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
     >
-      <div className="mb-3 h-20 w-full overflow-hidden rounded-2xl bg-gray-100">
+      <div className="relative h-32 w-full bg-gray-900">
         <img
           src={routine.image}
           alt={routine.title}
@@ -32,10 +32,15 @@ export const AiRoutineCard: React.FC<Props> = ({ routine }) => {
         />
       </div>
 
-      <p className="text-sm font-semibold text-gray-900">{routine.title}</p>
-      <p className="mt-1 text-xs text-gray-500">
-        {routine.durationLabel} · {routine.levelLabel}
-      </p>
+      {/* 텍스트 영역: 패딩/간격 정리 */}
+      <div className="p-4">
+        <p className="text-sm font-semibold text-gray-900 line-clamp-1">
+          {routine.title}
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          {routine.durationLabel} · {routine.levelLabel}
+        </p>
+      </div>
     </button>
   );
 };
