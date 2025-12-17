@@ -4,6 +4,9 @@ import AiRoutineSection from "../components/routine/AiRoutineSection";
 import MyRoutineSection from "../components/routine/MyRoutineSection";
 import { useAuthStore } from "../stores/authStore";
 
+const GANGDONG_SPORTS_URL =
+  "https://www.gangdong.go.kr/web/culture/bbs/athletic";
+
 const LocalProgramSection: React.FC = () => {
   const { user } = useAuthStore();
 
@@ -15,28 +18,19 @@ const LocalProgramSection: React.FC = () => {
     {
       title: "올림픽공원 걷기/스트레칭 클래스 (예시)",
       desc: "가벼운 유산소 + 전신 스트레칭 중심",
-      ctaLabel: "검색하기",
-      query: `${region} 올림픽공원 스트레칭 교실`,
     },
     {
       title: "강동구 생활체육 기초 근력운동 (예시)",
       desc: "초급 근력(코어/하체)·자세 교정 중심",
-      ctaLabel: "검색하기",
-      query: `${region} 생활체육 근력운동 프로그램`,
     },
     {
       title: "보건소/복지관 재활운동 프로그램 (예시)",
       desc: "재활 이후 유지 운동·통증 관리 교육 중심",
-      ctaLabel: "검색하기",
-      query: `${region} 보건소 재활 운동 프로그램`,
     },
   ];
 
-  const openYouTubeSearch = (q: string) => {
-    const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(
-      q
-    )}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+  const openGangdongPage = () => {
+    window.open(GANGDONG_SPORTS_URL, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -67,14 +61,15 @@ const LocalProgramSection: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => openYouTubeSearch(p.query)}
+              onClick={openGangdongPage}
               className="mt-3 w-full rounded-xl bg-black py-2 text-sm font-semibold text-white hover:bg-gray-900"
             >
-              {p.ctaLabel}
+              강동구청 프로그램 보러가기
             </button>
 
             <p className="mt-2 text-[11px] text-gray-500">
-              * 실제 서비스에서는 공공 데이터/검증된 프로그램 DB로 연동 가능
+              * 데모에서는 공공 페이지로 연결하고, 추후 공공데이터/API 연동으로
+              확장 가능
             </p>
           </div>
         ))}
