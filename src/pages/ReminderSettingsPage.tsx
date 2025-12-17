@@ -16,6 +16,21 @@ const extractTimeFromRule = (rule?: string | null): string | null => {
 
 const DEFAULT_TIME = "21:00"; // 기본 21시
 
+// ✅ "HH:MM" -> 분(minute)로 변환
+const toMinutes = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+};
+
+// ✅ 오늘 날짜 키 (중복 토스트 방지용)
+const todayKey = () => {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const ReminderSettingsPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -100,7 +115,6 @@ const ReminderSettingsPage: React.FC = () => {
         });
       }
     } catch {
-      // store에서 error 세팅해주니까 여기서는 로컬 에러만 두면 됨
       return;
     }
   };
@@ -113,6 +127,52 @@ const ReminderSettingsPage: React.FC = () => {
       hour: "numeric",
       minute: "2-digit",
     });
+
+  // ✅✅✅ [추가] 탭이 열려 있는 동안, 설정한 시간에 토스트 띄우기
+  useEffect(() => {
+    if (!enabled) return;
+
+    // 서버 rule이 있으면 그걸 우선, 없으면 현재 input time 사용
+    const t = extractTimeFromRule(exerciseReminder?.rule) ?? time;
+    if (!t) return;
+
+    const targetMin = toMinutes(t);
+
+    // 오늘 이미 토스트를 띄웠는지 확인하는 키
+    const firedStorageKey = `reminder_fired:${todayKey()}:${t}`;
+
+    const checkAndFire = () => {
+      // 탭이 백그라운드면 굳이 안 띄우고, 활성화될 때 다시 체크
+      if (document.visibilityState !== "visible") return;
+
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+
+      // 이미 오늘 한 번 띄웠으면 스킵
+      if (localStorage.getItem(firedStorageKey) === "1") return;
+
+      // 정확히 그 분(minute)에 진입하면 한 번 띄우기
+      if (nowMin === targetMin) {
+        localStorage.setItem(firedStorageKey, "1");
+        showToast("오늘 루틴 할 시간이에요!");
+      }
+    };
+
+    // 진입 즉시 1회 체크
+    checkAndFire();
+
+    // 10초마다 체크 (시연용으로 부드럽게)
+    const id = window.setInterval(checkAndFire, 10_000);
+
+    // 탭이 다시 활성화될 때도 즉시 체크
+    const onVisible = () => checkAndFire();
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [enabled, time, exerciseReminder?.rule]); // enabled / time / rule 바뀌면 다시 세팅
 
   return (
     <div className="px-6 py-6">
@@ -226,8 +286,13 @@ const ReminderSettingsPage: React.FC = () => {
         </div>
       )}
 
+      {/* 토스트 */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-black px-4 py-3 text-sm text-white shadow-lg">
+        <div
+          className="fixed left-1/2 top-1/2 z-50 
+                  -translate-x-1/2 -translate-y-1/2
+                  rounded-xl bg-black px-6 py-4 text-sm text-white shadow-lg"
+        >
           {toast}
         </div>
       )}
