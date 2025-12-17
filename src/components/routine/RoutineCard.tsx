@@ -4,7 +4,6 @@ import type { RoutineSummary } from "../../types/apis/routine";
 import { FiCalendar, FiTrash2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
-
 type Props = {
   routine: RoutineSummary;
   onClick?: () => void;
@@ -21,21 +20,19 @@ const RoutineCard: React.FC<Props> = ({ routine, onClick, onDelete }) => {
       className="flex w-full items-center justify-between rounded-3xl bg-white p-4 shadow-sm"
     >
       <div>
-        <p className="text-sm font-semibold text-gray-900">
-          {routine.title}
-        </p>
-        <p className="mt-1 text-xs text-gray-500">
-          {(routine.itemCount ?? 0)}개 · {routine.timeRangeLabel ?? "-"}
+        <p className="text-sm font-semibold text-gray-900">{routine.title}</p>
+        <p className="mt-1 px-3 text-xs text-gray-500">
+          {routine.itemCount ?? 0}개 · {routine.timeRangeLabel ?? "-"}
         </p>
       </div>
 
       <div className="flex items-center gap-3 text-gray-400">
-        <FiCalendar 
+        <FiCalendar
           onClick={(e) => {
             e.stopPropagation(); // 카드 클릭 방지
-            navigate('/app/calendar');
+            navigate("/app/calendar");
           }}
-          className="text-lg  hover:text-blue-600 cursor-pointer" 
+          className="text-lg  hover:text-blue-600 cursor-pointer"
         />
 
         {/* 삭제 버튼 */}
