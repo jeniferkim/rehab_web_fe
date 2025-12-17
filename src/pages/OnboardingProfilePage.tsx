@@ -18,6 +18,9 @@ const OnboardingProfilePage: React.FC = () => {
   const [age, setAge] = useState(user?.age ? String(user.age) : "");
   const [height, setHeight] = useState(user?.height ? String(user.height) : "");
   const [weight, setWeight] = useState(user?.weight ? String(user.weight) : "");
+
+  const [address, setAddress] = useState(user?.address ?? "");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -29,7 +32,12 @@ const OnboardingProfilePage: React.FC = () => {
   }, [user, navigate]);
 
   const isValid =
-    username.trim() && gender && age.trim() && height.trim() && weight.trim();
+    username.trim() &&
+    gender &&
+    age.trim() &&
+    height.trim() &&
+    weight.trim() &&
+    address.trim();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +53,7 @@ const OnboardingProfilePage: React.FC = () => {
         age: Number(age),
         height: Number(height),
         weight: Number(weight),
+        address: address.trim(),
         // TODO: birthDate는 UI에서 입력받거나, 나이 기준으로 계산해서 넣도록 추후 보완
         birthDate: "1990-01-01",
       };
@@ -178,6 +187,20 @@ const OnboardingProfilePage: React.FC = () => {
                 onChange={(e) => setWeight(e.target.value)}
               />
             </div>
+          </div>
+
+          {/* ✅ 주소 */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-800">
+              거주 지역(데모용)
+            </label>
+            <input
+              type="text"
+              placeholder="예: 서울시 강동구"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
           </div>
 
           {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}

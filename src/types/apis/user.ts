@@ -12,6 +12,7 @@ export interface UserProfile {
   age: number;
   height: number;
   weight: number;
+  address?: string;
   profileCompleted: boolean;
 }
 
