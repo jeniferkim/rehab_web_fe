@@ -144,9 +144,10 @@ VITE_KAKAO_AUTH_URL=...
 
 ## 👥 팀 구성 및 역할
 
-* **PM / Frontend**: 사용자 여정 설계, UI 구현, 상태 관리
-* **Backend**: 인증, 데이터 처리, API 설계
-* **AI**: 분류 로직 설계, 추천 알고리즘, GPT 연동
+* **PM / Frontend Web(김지원)**: 사용자 여정 설계, UI 구현, 상태 관리
+* **Frontend Mobile(김다우)**: 사용자 여정 설계, UI 구현, 상태 관리
+* **Backend(김동섭, 민차현)**: 인증, 데이터 처리, API 설계
+* **AI(김다우)**: 분류 로직 설계, 추천 알고리즘, GPT 연동
 
 ---
 
@@ -154,9 +155,3 @@ VITE_KAKAO_AUTH_URL=...
 
 * Backend Repository: https://github.com/mcha311/rehab_backend
 
----
-
-## ✨ 한 줄 요약
-
-> **RehabAI는 검증된 자가 평가와 규칙 기반 판단, AI 설명을 결합해
-> 집에서도 안전하게 재활을 이어갈 수 있도록 돕는 스마트 홈 재활 코치 서비스입니다.**
